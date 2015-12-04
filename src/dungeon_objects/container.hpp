@@ -5,10 +5,10 @@
 
 class Container{
     private:
-        char name[10];
-        char status[10];
-        char description[10];
-        char accept[10];
+        std::string name;
+        std::string status;
+        std::string description;
+        std::string accept;
         std::vector<Item> item;
         std::vector<Trigger> trigger;    
 };
