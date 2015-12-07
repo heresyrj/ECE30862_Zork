@@ -4,11 +4,11 @@
 
 class Item{
     private:
-        char name[10];
-        char status[10];
-        char description[10];
-        char writing[10];
-        char turn_on[10];
+        std::string name;
+        std::string status;
+        std::string description;
+        std::string writing;
+        std::string turn_on;
         std::vector<Trigger> trigger;    
 };
 

@@ -4,11 +4,11 @@
 
 class Creature{
     private:
-        char name[10];
-        char status[10];
-        char description[10];
-        char vulnerability[10];
-        char attack[10];
+        std::string name;
+        std::string status;
+        std::string description;
+        std::string vulnerability;
+        std::string attack;
         std::vector<Trigger> trigger;    
 };
 
