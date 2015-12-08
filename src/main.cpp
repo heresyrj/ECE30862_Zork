@@ -13,7 +13,6 @@ Room parseRoom(xml_node<> *room_node){
     Room new_room;
     
     for(xml_node<> *pNode = room_node->first_node(); pNode; pNode = pNode->next_sibling()){
-        //cout<<pNode->name()<<"\n";
         sub_node = pNode->name();
         if(sub_node == "name"){new_room.setName(pNode->value());}
         else if(sub_node == "status"){new_room.setStatus(pNode->value());}
@@ -39,7 +38,22 @@ Room parseRoom(xml_node<> *room_node){
     return new_room;
 }
 
-//function to parse the given xml file
+Item parseItem(xml_node<> *item_node){
+    string sub_node;
+    Item new_item;
+    
+    for(xml_node<> *pNode = item_node->first_node(); pNode; pNode = pNode->next_sibling()){
+        sub_node = pNode->name();
+        if(sub_node == "name"){new_item.setName(pNode->value());}
+        else if(sub_node == "writing"){new_item.setWriting(pNode->value());}
+        else if(sub_node == "description"){new_item.setDescription(pNode->value());}
+        else if(sub_node == "status"){new_item.setStatus(pNode->value());}
+        else if(sub_node == "turnon"){new_item.setTurnOn(pNode->value());}
+    }
+    return new_item;
+}
+
+//function to parse the given xml file for rooms
 vector<Room> parseXMLRooms(char *filename){
     string node_name;
     string sub_node_name;
@@ -55,9 +69,27 @@ vector<Room> parseXMLRooms(char *filename){
             Room new_room = parseRoom(sib);
             rooms.push_back(new_room);
         }
-    }
-    
+    }   
     return rooms;
+}
+
+//function to parse the given xml file for items
+vector<Item> parseXMLItems(char *filename){
+    string node_name, sub_node_name;
+    vector<Item> items;
+    
+    file<> xmlFile(filename);
+    xml_document<> doc;
+    doc.parse<0>(xmlFile.data());
+    xml_node<> *node = doc.first_node("map");
+    for(xml_node<> *sib = node->first_node(); sib; sib = sib->next_sibling()){
+        node_name = sib->name();
+        if(node_name == "item"){
+            Item new_item = parseItem(sib);
+            items.push_back(new_item);
+        }
+    }   
+    return items;
 }
 
 vector<Room> buildDungeon(vector<Room> rooms){
@@ -90,9 +122,11 @@ vector<Room> buildDungeon(vector<Room> rooms){
 //main function
 int main(int argc, char **argv){
     vector<Room> rooms;
+    vector<Item> items;
     Room *current_room;
     
     rooms = parseXMLRooms(argv[1]);
+    items = parseXMLItems(argv[1]);
     rooms = buildDungeon(rooms);
     current_room = &rooms.at(0);
     while(current_room != NULL){
@@ -103,17 +137,3 @@ int main(int argc, char **argv){
     
     return EXIT_SUCCESS;
 }
-
-/*
-cout<<"Node is a Room\n";
-for(xml_node<> *pNode = sib->first_node(); pNode; pNode = pNode->next_sibling()){
-    cout<<pNode->name()<<"\n";
-    sub_node_name = pNode->name();
-    if(sub_node_name == "border"){
-        Border border;
-        border.setDirection(pNode->first_node()->value());
-        border.setName(pNode->last_node()->value());
-        borders.push_back(border);
-    }
-}
-*/
