@@ -1,5 +1,6 @@
 #ifndef __ITEM_HPP_INCLUDED__
 #define __ITEM_HPP_INCLUDED__
+#include "dungeon.hpp"
 #include "trigger.hpp"
 
 class Item{
