@@ -13,7 +13,7 @@ class Room: public Dungeon{
     private:
         std::string name, status, type, description;
         std::vector<Border> border;
-        std::vector<Container> container;
+        std::vector<Container*> container;
         std::vector<std::string> container_list;
         std::vector<Item> item;
         std::vector<std::string> item_list;
@@ -44,9 +44,9 @@ class Room: public Dungeon{
         Room * getEast(void);
         Room * getSouth(void);
         Room * getWest(void);
-        void addContainer(Container cont);
-        std::vector<Container> getContainer(void);
-        void remContainer(Container cont);
+        void addContainer(Container *cont);
+        std::vector<Container*> getContainer(void);
+        void remContainer(std::string cont);
         void addContainerList(std::string cont);
         std::vector<std::string> getContainerList(void);
         void remContainerList(std::string cont);
@@ -103,9 +103,9 @@ Room * Room::getSouth(void){return south;}
 Room * Room::getWest(void){return west;}
 
 //container functions
-void Room::addContainer(Container cont){container.push_back(cont);}
-std::vector<Container> Room::getContainer(void){return container;}
-void Room::remContainer(Container cont){container.push_back(cont);}
+void Room::addContainer(Container *cont){container.push_back(cont);}
+std::vector<Container*> Room::getContainer(void){return container;}
+void Room::remContainer(std::string cont){}
 
 void Room::addContainerList(std::string cont){container_list.push_back(cont);}
 std::vector<std::string> Room::getContainerList(void){return container_list;}

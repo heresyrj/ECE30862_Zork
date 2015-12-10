@@ -127,9 +127,8 @@ vector<Container> parseXMLContainers(char *filename){
     return containers;
 }
 
-//populates the rooms with their items, containers, and creatures
-vector<Room> buildDungeon(vector<Room> rooms, vector<Item> items, vector<Container> containers){
-    vector<string> item_list, container_list, creature_list;
+vector<Container> buildContainers(vector<Container> containers, vector<Item> items){
+    vector<string> item_list, container_list;
     
     //populates the containers with their items
     for(unsigned i = 0; i < containers.size(); i++){
@@ -142,6 +141,12 @@ vector<Room> buildDungeon(vector<Room> rooms, vector<Item> items, vector<Contain
             }
         }
     }
+    return containers;
+}
+
+//populates the rooms with their items, containers, and creatures
+vector<Room> buildDungeon(vector<Room> rooms, vector<Item> items, vector<Container*> containers){
+    vector<string> item_list, container_list, creature_list;
     
     //populates the rooms with their appropriate items, containers, and creatures
     for(unsigned i = 0; i < rooms.size(); i++){
@@ -158,7 +163,7 @@ vector<Room> buildDungeon(vector<Room> rooms, vector<Item> items, vector<Contain
         //containers
         for(unsigned j = 0; j < container_list.size(); j++){
             for(unsigned k = 0; k < containers.size(); k++){
-                if(container_list.at(j) == containers.at(k).getName()){
+                if(container_list.at(j) == containers.at(k)->getName()){
                     rooms.at(i).addContainer(containers.at(k));
                 }
             }
@@ -169,10 +174,10 @@ vector<Room> buildDungeon(vector<Room> rooms, vector<Item> items, vector<Contain
 }
 
 //function that handles player commands
-void getPlayerAction(Player *player){
+void getPlayerAction(Player *player, vector<Item> items, vector<Creature> creatures){
     string command;
     vector<Item> items;
-    vector<Container> containers;
+    vector<Container*> containers;
     Item moved_item;
     cin>>command;
     
@@ -222,7 +227,7 @@ void getPlayerAction(Player *player){
         }
         else{
             cout<<"Inventory: "<<player->getInventory().at(0).getName();
-            for(unsigned i = 1; i < player->getInventory().size()-1; i++){
+            for(unsigned i = 1; i < player->getInventory().size(); i++){
                 cout<<", "<<player->getInventory().at(i).getName();
             }
             cout<<"\n";
@@ -238,17 +243,17 @@ void getPlayerAction(Player *player){
         else{
             containers = player->getCurrentRoom()->getContainer();
             for(unsigned i = 0; i < containers.size(); i++){
-                if(command == containers.at(i).getName()){
-                    items = containers.at(i).getItem();
+                if(command == containers.at(i)->getName()){
+                    items = containers.at(i)->getItem();
                     if(items.size() > 0){
-                        cout<<containers.at(i).getName()<<" contains "<<items.at(0).getName();
+                        cout<<containers.at(i)->getName()<<" contains "<<items.at(0).getName();
                         for(unsigned j = 1; j < items.size(); j++){
                             cout<<", "<<items.at(j).getName();
                         }
                         cout<<"\n";
                     }
                     else{
-                        cout<<containers.at(i).getName()<<" is empty.\n";
+                        cout<<containers.at(i)->getName()<<" is empty.\n";
                     }
                 }
                 
@@ -258,11 +263,29 @@ void getPlayerAction(Player *player){
     
     if(command.find("take")){
         items = player->getCurrentRoom()->getItem();
-        for(unsigned i = 0; i < items.size(); i++){
-            if(command == items.at(i).getName()){
-                moved_item = player->getCurrentRoom()->remItem(items.at(i).getName());
-                player->addItem(moved_item);
-                return;
+        if(items.size() > 0){
+            for(unsigned i = 0; i < items.size(); i++){
+                if(command == items.at(i).getName()){
+                    moved_item = player->getCurrentRoom()->remItem(items.at(i).getName());
+                    player->addItem(moved_item);
+                    cout<<"Item "<<moved_item.getName()<<" added to inventory.\n";
+                    return;
+                }
+            }
+        }
+        if(player->getCurrentRoom()->getContainer().size() > 0){
+            containers = player->getCurrentRoom()->getContainer();
+            for(unsigned i = 0; i < containers.size(); i++){
+                items = player->getCurrentRoom()->getContainer().at(i)->getItem();
+                for(unsigned j = 0; j < items.size(); j++){
+                    if(command == items.at(j).getName()){
+                        cout<<containers.at(i)<<"\n";
+                        moved_item = player->getCurrentRoom()->getContainer().at(i)->remItem(items.at(j).getName());
+                        player->addItem(moved_item);
+                        cout<<"Item "<<moved_item.getName()<<" added to inventory.\n";
+                        return;
+                    }
+                }
             }
         }
     }
@@ -273,6 +296,7 @@ void getPlayerAction(Player *player){
             if(command == items.at(i).getName()){
                 moved_item = player->remItem(items.at(i).getName());
                 player->getCurrentRoom()->addItem(moved_item);
+                cout<<moved_item.getName()<<" dropped.\n";
                 return;
             }
         }
@@ -285,12 +309,17 @@ int main(int argc, char **argv){
     vector<Room> rooms;
     vector<Item> items;
     vector<Container> containers;
+    vector<Container*> cont_refs;
     vector<Creature> creatures;
     
     rooms = parseXMLRooms(argv[1]);
     items = parseXMLItems(argv[1]);
     containers = parseXMLContainers(argv[1]);
-    rooms = buildDungeon(rooms, items, containers);
+    for(unsigned i = 0; i < containers.size(); i++){
+        cont_refs.push_back(&containers.at(i));
+    }
+    containers = buildContainers(containers, items);
+    rooms = buildDungeon(rooms, items, cont_refs);
     
     //conncects the rooms together
     for(unsigned i = 0; i < rooms.size(); i++){
