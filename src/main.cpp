@@ -174,7 +174,7 @@ vector<Room> buildDungeon(vector<Room> rooms, vector<Item> items, vector<Contain
 }
 
 //function that handles player commands
-void getPlayerAction(Player *player, vector<Item> items, vector<Creature> creatures){
+void getPlayerAction(Player *player, vector<Item> master_items, vector<Creature> master_creatures){
     string command;
     vector<Item> items;
     vector<Container*> containers;
@@ -279,7 +279,6 @@ void getPlayerAction(Player *player, vector<Item> items, vector<Creature> creatu
                 items = player->getCurrentRoom()->getContainer().at(i)->getItem();
                 for(unsigned j = 0; j < items.size(); j++){
                     if(command == items.at(j).getName()){
-                        cout<<containers.at(i)<<"\n";
                         moved_item = player->getCurrentRoom()->getContainer().at(i)->remItem(items.at(j).getName());
                         player->addItem(moved_item);
                         cout<<"Item "<<moved_item.getName()<<" added to inventory.\n";
@@ -348,7 +347,7 @@ int main(int argc, char **argv){
     
     cout<<player.getCurrentRoom()->getDescription()<<"\n";
     while(player.getExitFlag() == 0){
-        getPlayerAction(&player);
+        getPlayerAction(&player, items, creatures);
     }
     cout<<"Game Over\n";
     
