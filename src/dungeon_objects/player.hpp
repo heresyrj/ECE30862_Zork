@@ -7,6 +7,7 @@ class Player{
     private:
         Room *current_room;
         std::vector<Item> inventory;
+        int exit_flag;
         
     public:
         Player(Room *current);
@@ -16,16 +17,21 @@ class Player{
         void addItem(Item item);
         std::vector<Item> getInventory(void);
         Item remItem(std::string item);
+        void setExitFlag(int flag);
+        int getExitFlag(void);
 };
 
 Player::Player(Room *current){
     current_room = current;
+    exit_flag = 0;
 }
 Player::~Player(){}
 
 //current room functions
 void Player::setCurrentRoom(Room *current){current_room = current;}
 Room* Player::getCurrentRoom(void){return current_room;}
+void Player::setExitFlag(int flag){exit_flag = flag;}
+int Player::getExitFlag(void){return exit_flag;}
 
 //inventory functions
 void Player::addItem(Item item){inventory.push_back(item);}

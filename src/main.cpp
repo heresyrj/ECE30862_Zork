@@ -1,5 +1,6 @@
 #include <iostream>
 #include <vector>
+#include <string>
 #include "rapidxml/rapidxml.hpp"
 #include "rapidxml/rapidxml_utils.hpp"
 #include "rapidxml/rapidxml_print.hpp"
@@ -107,6 +108,7 @@ vector<Item> parseXMLItems(char *filename){
     return items;
 }
 
+//function to parse the given xml file for containers
 vector<Container> parseXMLContainers(char *filename){
     string node_name, sub_node_name;
     vector<Container> containers;
@@ -124,6 +126,8 @@ vector<Container> parseXMLContainers(char *filename){
     }   
     return containers;
 }
+
+//populates the rooms with their items, containers, and creatures
 vector<Room> buildDungeon(vector<Room> rooms, vector<Item> items, vector<Container> containers){
     vector<string> item_list, container_list, creature_list;
     
@@ -138,6 +142,7 @@ vector<Room> buildDungeon(vector<Room> rooms, vector<Item> items, vector<Contain
             }
         }
     }
+    
     //populates the rooms with their appropriate items, containers, and creatures
     for(unsigned i = 0; i < rooms.size(); i++){
         item_list = rooms.at(i).getItemList();
@@ -163,60 +168,113 @@ vector<Room> buildDungeon(vector<Room> rooms, vector<Item> items, vector<Contain
     return rooms;
 }
 
+//function that handles player commands
 void getPlayerAction(Player *player){
     string command;
+    vector<Item> items;
+    vector<Container> containers;
+    Item moved_item;
     cin>>command;
     
     if(command == "n"){
         if(player->getCurrentRoom()->getNorth() != NULL){
             player->setCurrentRoom(player->getCurrentRoom()->getNorth());
-            //cout<<player->getCurrentRoom()->getName()<<"\n";
             cout<<player->getCurrentRoom()->getDescription()<<"\n";
         }
         else{
             cout<<"Can't go that way.\n";
         }
     }
-    else if(command == "e"){
+    
+    if(command == "e"){
         if(player->getCurrentRoom()->getEast() != NULL){
             player->setCurrentRoom(player->getCurrentRoom()->getEast());
-            //cout<<player->getCurrentRoom()->getName()<<"\n";
             cout<<player->getCurrentRoom()->getDescription()<<"\n";
         }
         else{
             cout<<"Can't go that way.\n";
         }
     }
-    else if(command == "s"){
+    
+    if(command == "s"){
         if(player->getCurrentRoom()->getSouth() != NULL){
             player->setCurrentRoom(player->getCurrentRoom()->getSouth());
-            //cout<<player->getCurrentRoom()->getName()<<"\n";
             cout<<player->getCurrentRoom()->getDescription()<<"\n";
         }
         else{
             cout<<"Can't go that way.\n";
         }
     }
-    else if(command == "w"){
+    
+    if(command == "w"){
         if(player->getCurrentRoom()->getWest() != NULL){
             player->setCurrentRoom(player->getCurrentRoom()->getWest());
-            //cout<<player->getCurrentRoom()->getName()<<"\n";
             cout<<player->getCurrentRoom()->getDescription()<<"\n";
         }
         else{
             cout<<"Can't go that way.\n";
         }
     }
-    else if(command == "i"){
+    
+    if(command == "i"){
         if(player->getInventory().size() == 0){
             cout<<"Inventory: empty\n";
         }
         else{
-            cout<<"Inventory: "<<player->getInventory().at(1).getName();
+            cout<<"Inventory: "<<player->getInventory().at(0).getName();
             for(unsigned i = 1; i < player->getInventory().size()-1; i++){
                 cout<<", "<<player->getInventory().at(i).getName();
             }
             cout<<"\n";
+        }
+    }
+    
+    if(command.find("open")){
+        if(command == "exit"){
+            if(player->getCurrentRoom()->getType() == "exit"){
+                player->setExitFlag(1);
+            }
+        }
+        else{
+            containers = player->getCurrentRoom()->getContainer();
+            for(unsigned i = 0; i < containers.size(); i++){
+                if(command == containers.at(i).getName()){
+                    items = containers.at(i).getItem();
+                    if(items.size() > 0){
+                        cout<<containers.at(i).getName()<<" contains "<<items.at(0).getName();
+                        for(unsigned j = 1; j < items.size(); j++){
+                            cout<<", "<<items.at(j).getName();
+                        }
+                        cout<<"\n";
+                    }
+                    else{
+                        cout<<containers.at(i).getName()<<" is empty.\n";
+                    }
+                }
+                
+            }
+        }
+    }
+    
+    if(command.find("take")){
+        items = player->getCurrentRoom()->getItem();
+        for(unsigned i = 0; i < items.size(); i++){
+            if(command == items.at(i).getName()){
+                moved_item = player->getCurrentRoom()->remItem(items.at(i).getName());
+                player->addItem(moved_item);
+                return;
+            }
+        }
+    }
+    
+    if(command.find("drop")){
+        items = player->getInventory();
+        for(unsigned i = 0; i < items.size(); i++){
+            if(command == items.at(i).getName()){
+                moved_item = player->remItem(items.at(i).getName());
+                player->getCurrentRoom()->addItem(moved_item);
+                return;
+            }
         }
     }
     return;
@@ -259,24 +317,11 @@ int main(int argc, char **argv){
     
     Player player(&rooms.at(0));
     
-    cout<<player.getCurrentRoom()->getName()<<"\n";
     cout<<player.getCurrentRoom()->getDescription()<<"\n";
-    if(player.getCurrentRoom()->getItem().size() > 0){
-        cout<<player.getCurrentRoom()->getItem().at(0).getName()<<"\n";
-    }
-    
-    while(player.getCurrentRoom()->getType() != "exit"){
+    while(player.getExitFlag() == 0){
         getPlayerAction(&player);
-        if(player.getCurrentRoom()->getItem().size() > 0){
-            cout<<player.getCurrentRoom()->getItem().at(0).getName()<<"\n";
-        }
-        if(player.getCurrentRoom()->getContainer().size() > 0){
-            cout<<player.getCurrentRoom()->getContainer().at(0).getName()<<"\n";
-            if(player.getCurrentRoom()->getContainer().at(0).getItemList().size() > 0){
-                cout<<player.getCurrentRoom()->getContainer().at(0).getItemList().at(0)<<"\n";
-            }
-        }
     }
+    cout<<"Game Over\n";
     
     return EXIT_SUCCESS;
 }

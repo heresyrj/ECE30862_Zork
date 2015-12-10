@@ -52,7 +52,7 @@ class Room: public Dungeon{
         void remContainerList(std::string cont);
         void addItem(Item it);
         std::vector<Item> getItem(void);
-        void remItem(std::string it);
+        Item remItem(std::string it);
         void addItemList(std::string it);
         std::vector<std::string> getItemList(void);
         void remItemList(std::string it);
@@ -121,11 +121,12 @@ void Room::remContainerList(std::string cont){
 //item functions
 void Room::addItem(Item it){item.push_back(it);}
 std::vector<Item> Room::getItem(void){return item;}
-void Room::remItem(std::string it){
+Item Room::remItem(std::string it){
     for(unsigned i = 0; i < item.size(); i++){
         if(item.at(i).getName() == it){
+            Item taken_item = item.at(i);
             item.erase(item.begin()+i);
-            return;
+            return taken_item;
         }
     }
 }

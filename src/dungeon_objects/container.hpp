@@ -25,6 +25,7 @@ class Container{
         void setAccept(std::string stat);
         std::string getAccept(void);
         void addItem(Item item);
+        std::vector<Item> getItem(void);
         Item remItem(std::string item);
         void addItemList(std::string it);
         std::vector<std::string> getItemList(void);
@@ -45,6 +46,7 @@ std::string Container::getAccept(void){return accept;}
 
 //container functions
 void Container::addItem(Item it){item.push_back(it);}
+std::vector<Item> Container::getItem(void){return item;}
 Item Container::remItem(std::string it){
     for(unsigned i = 0; i < item.size(); i++){
         if(item.at(i).getName() == it){
