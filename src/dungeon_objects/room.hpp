@@ -45,12 +45,14 @@ class Room: public Dungeon{
         Room * getSouth(void);
         Room * getWest(void);
         void addContainer(Container cont);
+        std::vector<Container> getContainer(void);
         void remContainer(Container cont);
         void addContainerList(std::string cont);
         std::vector<std::string> getContainerList(void);
         void remContainerList(std::string cont);
         void addItem(Item it);
-        void remItem(Item it);
+        std::vector<Item> getItem(void);
+        void remItem(std::string it);
         void addItemList(std::string it);
         std::vector<std::string> getItemList(void);
         void remItemList(std::string it);
@@ -102,6 +104,7 @@ Room * Room::getWest(void){return west;}
 
 //container functions
 void Room::addContainer(Container cont){container.push_back(cont);}
+std::vector<Container> Room::getContainer(void){return container;}
 void Room::remContainer(Container cont){container.push_back(cont);}
 
 void Room::addContainerList(std::string cont){container_list.push_back(cont);}
@@ -117,7 +120,15 @@ void Room::remContainerList(std::string cont){
 
 //item functions
 void Room::addItem(Item it){item.push_back(it);}
-void Room::remItem(Item it){item.push_back(it);}
+std::vector<Item> Room::getItem(void){return item;}
+void Room::remItem(std::string it){
+    for(unsigned i = 0; i < item.size(); i++){
+        if(item.at(i).getName() == it){
+            item.erase(item.begin()+i);
+            return;
+        }
+    }
+}
 
 void Room::addItemList(std::string it){item_list.push_back(it);}
 std::vector<std::string> Room::getItemList(void){return item_list;}
