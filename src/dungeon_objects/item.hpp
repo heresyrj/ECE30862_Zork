@@ -9,7 +9,8 @@ class Item{
         std::string status;
         std::string description;
         std::string writing;
-        std::string turn_on;
+        std::string turn_on_text;
+        std::vector<std::string> turn_on_action;
         std::vector<Trigger> trigger;
         
     public:
@@ -23,8 +24,10 @@ class Item{
         std::string getDescription(void);
         void setWriting(std::string writ);
         std::string getWriting(void);
-        void setTurnOn(std::string turn);
-        std::string getTurnOn(void);
+        void setTurnOnText(std::string turn);
+        std::string getTurnOnText(void);
+        void addTurnOnAction(std::string action);
+        std::vector<std::string> getTurnOnAction(void);
 };
 
 Item::Item(){}
@@ -37,7 +40,9 @@ void Item::setDescription(std::string desc){description = desc;}
 std::string Item::getDescription(void){return description;}
 void Item::setWriting(std::string writ){writing = writ;}
 std::string Item::getWriting(void){return writing;}
-void Item::setTurnOn(std::string turn){turn_on = turn;}
-std::string Item::getTurnOn(void){return turn_on;}
+void Item::setTurnOnText(std::string turn){turn_on_text = turn;}
+std::string Item::getTurnOnText(void){return turn_on_text;}
+void Item::addTurnOnAction(std::string action){turn_on_action.push_back(action);}
+std::vector<std::string> Item::getTurnOnAction(void){return turn_on_action;}
 
 #endif

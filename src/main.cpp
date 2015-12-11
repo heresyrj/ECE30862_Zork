@@ -49,7 +49,17 @@ Item parseItem(xml_node<> *item_node){
         else if(sub_node == "writing"){new_item.setWriting(pNode->value());}
         else if(sub_node == "description"){new_item.setDescription(pNode->value());}
         else if(sub_node == "status"){new_item.setStatus(pNode->value());}
-        else if(sub_node == "turnon"){new_item.setTurnOn(pNode->value());}
+        else if(sub_node == "turnon"){
+            for(xml_node<> *turn_node = pNode->first_node(); turn_node; turn_node = turn_node->next_sibling()){
+                sub_node = turn_node->name();
+                if(sub_node == "print"){
+                    new_item.setTurnOnText(turn_node->value());
+                }
+                else if(sub_node == "action"){
+                    new_item.addTurnOnAction(turn_node->value());
+                }
+            }
+        }
     }
     return new_item;
 }
@@ -345,6 +355,18 @@ void getPlayerAction(Player *player, vector<Item> master_items, vector<Creature>
                             return;
                         }
                     }
+                }
+            }
+        }
+        cout<<"That is not in your inventory.\n";
+    }
+    
+    else if(command.find("turn") != string::npos){
+        for(unsigned i = 0; i < player->getInventory().size(); i++){
+            if(command.find(player->getInventory().at(i).getName()) != string::npos){
+                if(player->getInventory().at(i).getTurnOnText() != "\0"){
+                    cout<<player->getInventory().at(i).getTurnOnText()<<"\n";
+                    return;
                 }
             }
         }
