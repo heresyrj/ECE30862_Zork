@@ -12,6 +12,7 @@ class Container{
         std::vector<Item> item;
         std::vector<Trigger> trigger;
         std::vector<std::string> item_list;
+        int open_flag;
         
     public:
         Container();
@@ -30,10 +31,12 @@ class Container{
         void addItemList(std::string it);
         std::vector<std::string> getItemList(void);
         void remItemList(std::string it);
+        void setOpenFlag(int flag);
+        int getOpenFlag(void);
         
 };
 
-Container::Container(){}
+Container::Container(){open_flag = 0;}
 Container::~Container(){}
 void Container::setName(std::string nam){name = nam;}
 std::string Container::getName(void){return name;}
@@ -43,6 +46,8 @@ void Container::setDescription(std::string desc){description = desc;}
 std::string Container::getDescription(void){return description;}
 void Container::setAccept(std::string acc){accept = acc;}
 std::string Container::getAccept(void){return accept;}
+void Container::setOpenFlag(int flag){open_flag = flag;}
+int Container::getOpenFlag(void){return open_flag;}
 
 //container functions
 void Container::addItem(Item it){item.push_back(it);}

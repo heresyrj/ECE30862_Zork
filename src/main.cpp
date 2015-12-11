@@ -179,8 +179,8 @@ void getPlayerAction(Player *player, vector<Item> master_items, vector<Creature>
     vector<Item> items;
     vector<Container*> containers;
     Item moved_item;
-    cin>>command;
-    
+    getline(cin,command);
+
     if(command == "n"){
         if(player->getCurrentRoom()->getNorth() != NULL){
             player->setCurrentRoom(player->getCurrentRoom()->getNorth());
@@ -191,7 +191,7 @@ void getPlayerAction(Player *player, vector<Item> master_items, vector<Creature>
         }
     }
     
-    if(command == "e"){
+    else if(command == "e"){
         if(player->getCurrentRoom()->getEast() != NULL){
             player->setCurrentRoom(player->getCurrentRoom()->getEast());
             cout<<player->getCurrentRoom()->getDescription()<<"\n";
@@ -201,7 +201,7 @@ void getPlayerAction(Player *player, vector<Item> master_items, vector<Creature>
         }
     }
     
-    if(command == "s"){
+    else if(command == "s"){
         if(player->getCurrentRoom()->getSouth() != NULL){
             player->setCurrentRoom(player->getCurrentRoom()->getSouth());
             cout<<player->getCurrentRoom()->getDescription()<<"\n";
@@ -211,7 +211,7 @@ void getPlayerAction(Player *player, vector<Item> master_items, vector<Creature>
         }
     }
     
-    if(command == "w"){
+    else if(command == "w"){
         if(player->getCurrentRoom()->getWest() != NULL){
             player->setCurrentRoom(player->getCurrentRoom()->getWest());
             cout<<player->getCurrentRoom()->getDescription()<<"\n";
@@ -221,7 +221,7 @@ void getPlayerAction(Player *player, vector<Item> master_items, vector<Creature>
         }
     }
     
-    if(command == "i"){
+    else if(command == "i"){
         if(player->getInventory().size() == 0){
             cout<<"Inventory: empty\n";
         }
@@ -234,8 +234,8 @@ void getPlayerAction(Player *player, vector<Item> master_items, vector<Creature>
         }
     }
     
-    if(command.find("open")){
-        if(command == "exit"){
+    else if(command.find("open") != string::npos){
+        if(command.find("exit") != string::npos){
             if(player->getCurrentRoom()->getType() == "exit"){
                 player->setExitFlag(1);
             }
@@ -243,8 +243,9 @@ void getPlayerAction(Player *player, vector<Item> master_items, vector<Creature>
         else{
             containers = player->getCurrentRoom()->getContainer();
             for(unsigned i = 0; i < containers.size(); i++){
-                if(command == containers.at(i)->getName()){
+                if(command.find(containers.at(i)->getName()) != string::npos){
                     items = containers.at(i)->getItem();
+                    containers.at(i)->setOpenFlag(1);
                     if(items.size() > 0){
                         cout<<containers.at(i)->getName()<<" contains "<<items.at(0).getName();
                         for(unsigned j = 1; j < items.size(); j++){
@@ -261,11 +262,11 @@ void getPlayerAction(Player *player, vector<Item> master_items, vector<Creature>
         }
     }
     
-    if(command.find("take")){
+    else if(command.find("take") != string::npos){
         items = player->getCurrentRoom()->getItem();
         if(items.size() > 0){
             for(unsigned i = 0; i < items.size(); i++){
-                if(command == items.at(i).getName()){
+                if(command.find(items.at(i).getName()) != string::npos){
                     moved_item = player->getCurrentRoom()->remItem(items.at(i).getName());
                     player->addItem(moved_item);
                     cout<<"Item "<<moved_item.getName()<<" added to inventory.\n";
@@ -278,7 +279,8 @@ void getPlayerAction(Player *player, vector<Item> master_items, vector<Creature>
             for(unsigned i = 0; i < containers.size(); i++){
                 items = player->getCurrentRoom()->getContainer().at(i)->getItem();
                 for(unsigned j = 0; j < items.size(); j++){
-                    if(command == items.at(j).getName()){
+                    if(command.find(items.at(j).getName())!= string::npos
+                       && containers.at(i)->getOpenFlag() > 0){
                         moved_item = player->getCurrentRoom()->getContainer().at(i)->remItem(items.at(j).getName());
                         player->addItem(moved_item);
                         cout<<"Item "<<moved_item.getName()<<" added to inventory.\n";
@@ -287,12 +289,13 @@ void getPlayerAction(Player *player, vector<Item> master_items, vector<Creature>
                 }
             }
         }
+        cout<<"That item is not here.\n";
     }
     
-    if(command.find("drop")){
+    else if(command.find("drop") != string::npos){
         items = player->getInventory();
         for(unsigned i = 0; i < items.size(); i++){
-            if(command == items.at(i).getName()){
+            if(command.find(items.at(i).getName()) != string::npos){
                 moved_item = player->remItem(items.at(i).getName());
                 player->getCurrentRoom()->addItem(moved_item);
                 cout<<moved_item.getName()<<" dropped.\n";
@@ -300,6 +303,40 @@ void getPlayerAction(Player *player, vector<Item> master_items, vector<Creature>
             }
         }
     }
+    
+    
+    else if(command.find("read") != std::string::npos){
+        for(unsigned i = 0; i < player->getInventory().size(); i++){
+            if(command.find(player->getInventory().at(i).getName()) != string::npos){
+                if(player->getInventory().at(i).getWriting() != "\0"){
+                    cout<<player->getInventory().at(i).getWriting()<<"\n";
+                    return;
+                }
+                else{
+                    cout<<"Nothing written.\n";
+                    return;
+                }
+            }
+        }
+        cout<<"That is not in your inventory.\n";
+    }
+    
+    else if(command.find("put") != string::npos){
+        for(unsigned i = 0; i < player->getInventory().size(); i++){
+            if(command.find(player->getInventory().at(i).getName()) != string::npos){
+                for(unsigned j = 0; i < player->getCurrentRoom()->getContainer().size(); j++){
+                    if(command.find(player->getCurrentRoom()->getContainer().at(j)->getName()) != string::npos){
+                        moved_item = player->remItem(player->getInventory().at(i).getName());
+                        player->getCurrentRoom()->getContainer().at(j)->addItem(moved_item);
+                        cout<<"Item "<<moved_item.getName()<<" moved to "<<player->getCurrentRoom()->getContainer().at(j)->getName()<<"\n";
+                        return;
+                    }
+                }
+            }
+        }
+        cout<<"That is not in your inventory.\n";
+    }
+    
     return;
 }
 
