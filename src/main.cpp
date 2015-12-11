@@ -183,6 +183,23 @@ vector<Room> buildDungeon(vector<Room> rooms, vector<Item> items, vector<Contain
     return rooms;
 }
 
+//function that handles internal commands
+void interiorCommand(string command, Player *player, vector<Item> master_items, vector<Creature> master_creatures){
+    if(command.find("update") != string::npos || command.find("Update") != string::npos){
+        size_t found = command.find_last_of(" ");
+        for(unsigned i = 0; i < player->getInventory().size(); i++){
+            if(command.find(player->getInventory().at(i).getName()) != string::npos){
+                Item temp_item = player->remItem(player->getInventory().at(i).getName());
+                temp_item.setStatus(command.substr(found+1));
+                player->addItem(temp_item);
+                return;
+            }
+        }
+        return;
+    }
+    return;
+}
+
 //function that handles player commands
 void getPlayerAction(Player *player, vector<Item> master_items, vector<Creature> master_creatures){
     string command;
@@ -366,8 +383,11 @@ void getPlayerAction(Player *player, vector<Item> master_items, vector<Creature>
             if(command.find(player->getInventory().at(i).getName()) != string::npos){
                 if(player->getInventory().at(i).getTurnOnText() != "\0"){
                     cout<<player->getInventory().at(i).getTurnOnText()<<"\n";
-                    return;
                 }
+                for(unsigned j = 0; j < player->getInventory().at(i).getTurnOnAction().size(); j++){
+                    interiorCommand(player->getInventory().at(i).getTurnOnAction().at(j), player, master_items, master_creatures);
+                }
+                return;
             }
         }
         cout<<"That is not in your inventory.\n";
@@ -419,9 +439,14 @@ int main(int argc, char **argv){
     Player player(&rooms.at(0));
     
     cout<<player.getCurrentRoom()->getDescription()<<"\n";
+    /*
     while(player.getExitFlag() == 0){
         getPlayerAction(&player, items, creatures);
+        for(unsigned i = 0; i < player.getInventory().size(); i++){
+            cout<<player.getInventory().at(i).getStatus()<<"\n";
+        }
     }
+    */
     cout<<"Game Over\n";
     
     return EXIT_SUCCESS;
