@@ -326,10 +326,24 @@ void getPlayerAction(Player *player, vector<Item> master_items, vector<Creature>
             if(command.find(player->getInventory().at(i).getName()) != string::npos){
                 for(unsigned j = 0; i < player->getCurrentRoom()->getContainer().size(); j++){
                     if(command.find(player->getCurrentRoom()->getContainer().at(j)->getName()) != string::npos){
-                        moved_item = player->remItem(player->getInventory().at(i).getName());
-                        player->getCurrentRoom()->getContainer().at(j)->addItem(moved_item);
-                        cout<<"Item "<<moved_item.getName()<<" moved to "<<player->getCurrentRoom()->getContainer().at(j)->getName()<<"\n";
-                        return;
+                        if(player->getCurrentRoom()->getContainer().at(j)->getAccept() == "\0"
+                        && player->getCurrentRoom()->getContainer().at(j)->getOpenFlag() > 0){
+                            moved_item = player->remItem(player->getInventory().at(i).getName());
+                            player->getCurrentRoom()->getContainer().at(j)->addItem(moved_item);
+                            cout<<"Item "<<moved_item.getName()<<" moved to "<<player->getCurrentRoom()->getContainer().at(j)->getName()<<"\n";
+                            return;
+                        }
+                        else if(player->getCurrentRoom()->getContainer().at(j)->getAccept() != "\0"
+                        && player->getInventory().at(i).getName() == player->getCurrentRoom()->getContainer().at(j)->getAccept()){
+                            moved_item = player->remItem(player->getInventory().at(i).getName());
+                            player->getCurrentRoom()->getContainer().at(j)->addItem(moved_item);
+                            cout<<"Item "<<moved_item.getName()<<" moved to "<<player->getCurrentRoom()->getContainer().at(j)->getName()<<"\n";
+                            return;
+                        }
+                        else{
+                            cout<<player->getInventory().at(i).getName()<<" cannot go into "<<player->getCurrentRoom()->getContainer().at(j)->getName()<<"\n";
+                            return;
+                        }
                     }
                 }
             }
