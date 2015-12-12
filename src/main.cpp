@@ -103,6 +103,21 @@ Creature parseCreature(xml_node<> *creature_node){
                 }
             }
         }
+        if(sub_node == "trigger"){
+            Trigger trigger;
+            for(xml_node<> *att_node = pNode->first_node(); att_node; att_node = att_node->next_sibling()){
+                sub_node = att_node->name();
+                if(sub_node == "print"){trigger.setAttackText(att_node->value());}
+                if(sub_node == "action"){new_creature.addAttackAction(att_node->value());}
+                if(sub_node == "condition"){
+                    for(xml_node<> *cond = att_node->first_node(); cond; cond = cond->next_sibling()){
+                        sub_node = cond->name();
+                        if(sub_node == "object"){new_creature.setCondObject(cond->value());}
+                        else if(sub_node == "status"){new_creature.setCondStatus(cond->value());}
+                    }
+                }
+            }
+        }
     }
     return new_creature;
 }
@@ -489,7 +504,7 @@ void getPlayerAction(Player *player, vector<Item> master_items, vector<Creature>
         cout<<"That is not in your inventory.\n";
     }
     
-    else if(command.find(">attack") != string::npos){
+    else if(command.find("attack") != string::npos){
         
     }
     
