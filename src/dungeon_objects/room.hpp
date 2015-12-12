@@ -57,7 +57,8 @@ class Room: public Dungeon{
         std::vector<std::string> getItemList(void);
         void remItemList(std::string it);
         void addCreature(Creature creat);
-        void remCreature(Creature creat);
+        std::vector<Creature> getCreature(void);
+        void remCreature(std::string creat);
         void addCreatureList(std::string creat);
         std::vector<std::string> getCreatureList(void);
         void remCreatureList(std::string creat);
@@ -144,7 +145,15 @@ void Room::remItemList(std::string it){
 
 //creature functions
 void Room::addCreature(Creature creat){creature.push_back(creat);}
-void Room::remCreature(Creature creat){creature.push_back(creat);}
+std::vector<Creature> Room::getCreature(void){return creature;}
+void Room::remCreature(std::string creat){
+    for(unsigned i = 0; i < creature.size(); i++){
+        if(creat == creature.at(i).getName()){
+            creature.erase(creature.begin()+i);
+            return;
+        }
+    }
+}
 
 void Room::addCreatureList(std::string creat){creature_list.push_back(creat);}
 std::vector<std::string> Room::getCreatureList(void){return creature_list;}

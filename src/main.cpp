@@ -79,6 +79,33 @@ Container parseContainer(xml_node<> *container_node){
     return new_container;
 }
 
+Creature parseCreature(xml_node<> *creature_node){
+    string sub_node;
+    Creature new_creature;
+    
+    for(xml_node<> *pNode = creature_node->first_node(); pNode; pNode = pNode ->next_sibling()){
+        sub_node = pNode->name();
+        if(sub_node == "name"){new_creature.setName(pNode->value());}
+        if(sub_node == "status"){new_creature.setStatus(pNode->value());}
+        if(sub_node == "description"){new_creature.setDescription(pNode->value());}
+        if(sub_node == "vulnerability"){new_creature.setVulnerability(pNode->value());}
+        if(sub_node == "attack"){
+            for(xml_node<> *att_node = pNode->first_node(); att_node; att_node = att_node->next_sibling()){
+                sub_node = att_node->name();
+                if(sub_node == "print"){new_creature.setAttackText(att_node->value());}
+                if(sub_node == "action"){new_creature.addAttackAction(att_node->value());}
+                if(sub_node == "condition"){
+                    for(xml_node<> *cond = att_node->first_node(); cond; cond = cond->next_sibling()){
+                        sub_node = cond->name();
+                        if(sub_node == "object"){new_creature.setCondObject(cond->value());}
+                        else if(sub_node == "status"){new_creature.setCondStatus(cond->value());}
+                    }
+                }
+            }
+        }
+    }
+    return new_creature;
+}
 //function to parse the given xml file for rooms
 vector<Room> parseXMLRooms(char *filename){
     string node_name;
@@ -101,7 +128,7 @@ vector<Room> parseXMLRooms(char *filename){
 
 //function to parse the given xml file for items
 vector<Item> parseXMLItems(char *filename){
-    string node_name, sub_node_name;
+    string node_name;
     vector<Item> items;
     
     file<> xmlFile(filename);
@@ -120,7 +147,7 @@ vector<Item> parseXMLItems(char *filename){
 
 //function to parse the given xml file for containers
 vector<Container> parseXMLContainers(char *filename){
-    string node_name, sub_node_name;
+    string node_name;
     vector<Container> containers;
     
     file<> xmlFile(filename);
@@ -137,6 +164,24 @@ vector<Container> parseXMLContainers(char *filename){
     return containers;
 }
 
+//parse the xml document for creatures
+vector<Creature> parseXMLCreatures(char *filename){
+    string node_name;
+    vector<Creature> creatures;
+    
+    file<> xmlFile(filename);
+    xml_document<> doc;
+    doc.parse<0>(xmlFile.data());
+    xml_node<> *node = doc.first_node("map");
+    for(xml_node<> *sib = node->first_node(); sib; sib = sib->next_sibling()){
+        node_name = sib->name();
+        if(node_name == "creature"){
+            Creature new_creature = parseCreature(sib);
+            creatures.push_back(new_creature);
+        }
+    }   
+    return creatures;
+}
 vector<Container> buildContainers(vector<Container> containers, vector<Item> items){
     vector<string> item_list, container_list;
     
@@ -155,13 +200,14 @@ vector<Container> buildContainers(vector<Container> containers, vector<Item> ite
 }
 
 //populates the rooms with their items, containers, and creatures
-vector<Room> buildDungeon(vector<Room> rooms, vector<Item> items, vector<Container*> containers){
+vector<Room> buildDungeon(vector<Room> rooms, vector<Item> items, vector<Container*> containers, vector<Creature> creatures){
     vector<string> item_list, container_list, creature_list;
     
     //populates the rooms with their appropriate items, containers, and creatures
     for(unsigned i = 0; i < rooms.size(); i++){
         item_list = rooms.at(i).getItemList();
         container_list = rooms.at(i).getContainerList();
+        creature_list = rooms.at(i).getCreatureList();
         //items
         for(unsigned j = 0; j < item_list.size(); j++){
             for(unsigned k = 0; k < items.size(); k++){
@@ -175,6 +221,14 @@ vector<Room> buildDungeon(vector<Room> rooms, vector<Item> items, vector<Contain
             for(unsigned k = 0; k < containers.size(); k++){
                 if(container_list.at(j) == containers.at(k)->getName()){
                     rooms.at(i).addContainer(containers.at(k));
+                }
+            }
+        }
+        //creatures
+        for(unsigned j = 0; j < creature_list.size(); j++){
+            for(unsigned k = 0; k < creatures.size(); k++){
+                if(creature_list.at(j) == creatures.at(k).getName()){
+                    rooms.at(i).addCreature(creatures.at(k));
                 }
             }
         }
@@ -196,6 +250,16 @@ void interiorCommand(string command, Player *player, vector<Item> master_items, 
             }
         }
         return;
+    }
+    
+    else if(command.find("drop") != string::npos || command.find("Drop") != string::npos){
+        for(unsigned i = 0; i < player->getInventory().size(); i++){
+            if(command.find(player->getInventory().at(i).getName()) != string::npos){
+                Item temp_item = player->remItem(player->getInventory().at(i).getName());
+                player->getCurrentRoom()->addItem(temp_item);
+                return;
+            }
+        }
     }
     return;
 }
@@ -386,6 +450,7 @@ void getPlayerAction(Player *player, vector<Item> master_items, vector<Creature>
                 }
                 for(unsigned j = 0; j < player->getInventory().at(i).getTurnOnAction().size(); j++){
                     interiorCommand(player->getInventory().at(i).getTurnOnAction().at(j), player, master_items, master_creatures);
+                    if(player->getInventory().size() == 0){return;}
                 }
                 return;
             }
@@ -400,6 +465,7 @@ void getPlayerAction(Player *player, vector<Item> master_items, vector<Creature>
 int main(int argc, char **argv){
     vector<Room> rooms;
     vector<Item> items;
+    //vector<Item*> item_refs; //if we want to change items to references
     vector<Container> containers;
     vector<Container*> cont_refs;
     vector<Creature> creatures;
@@ -410,8 +476,9 @@ int main(int argc, char **argv){
     for(unsigned i = 0; i < containers.size(); i++){
         cont_refs.push_back(&containers.at(i));
     }
+    creatures = parseXMLCreatures(argv[1]);
     containers = buildContainers(containers, items);
-    rooms = buildDungeon(rooms, items, cont_refs);
+    rooms = buildDungeon(rooms, items, cont_refs, creatures);
     
     //conncects the rooms together
     for(unsigned i = 0; i < rooms.size(); i++){
@@ -439,14 +506,11 @@ int main(int argc, char **argv){
     Player player(&rooms.at(0));
     
     cout<<player.getCurrentRoom()->getDescription()<<"\n";
-    /*
+    
     while(player.getExitFlag() == 0){
         getPlayerAction(&player, items, creatures);
-        for(unsigned i = 0; i < player.getInventory().size(); i++){
-            cout<<player.getInventory().at(i).getStatus()<<"\n";
-        }
     }
-    */
+    
     cout<<"Game Over\n";
     
     return EXIT_SUCCESS;

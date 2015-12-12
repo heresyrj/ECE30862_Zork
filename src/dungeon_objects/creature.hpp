@@ -8,7 +8,10 @@ class Creature{
         std::string status;
         std::string description;
         std::string vulnerability;
-        std::string attack;
+        std::string attackText;
+        std::vector<std::string> attackAction;
+        std::string cond_object;
+        std::string cond_status;
         std::vector<Trigger> trigger;
         
     public:
@@ -22,6 +25,14 @@ class Creature{
         std::string getDescription(void);
         void setVulnerability(std::string vuln);
         std::string getVulnerability(void);
+        void setCondObject(std::string object);
+        std::string getCondObject(void);
+        void setCondStatus(std::string status);
+        std::string getCondStatus(void);
+        void setAttackText(std::string text);
+        std::string getAttackText(void);
+        void addAttackAction(std::string action);
+        std::vector<std::string> getAttackAction(void);
 };
 Creature::Creature(){}
 Creature::~Creature(){}
@@ -33,4 +44,12 @@ void Creature::setDescription(std::string desc){description = desc;}
 std::string Creature::getDescription(void){return description;}
 void Creature::setVulnerability(std::string vuln){vulnerability = vuln;}
 std::string Creature::getVulnerability(void){return vulnerability;}
+void Creature::setCondObject(std::string object){cond_object = object;}
+std::string Creature::getCondObject(void){return cond_object;}
+void Creature::setCondStatus(std::string status){cond_status = status;}
+std::string Creature::getCondStatus(void){return cond_status;}
+void Creature::setAttackText(std::string text){attackText = text;}
+std::string Creature::getAttackText(void){return attackText;}
+void Creature::addAttackAction(std::string action){attackAction.push_back(action);}
+std::vector<std::string> Creature::getAttackAction(void){return attackAction;}
 #endif

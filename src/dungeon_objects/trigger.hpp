@@ -3,10 +3,10 @@
 
 class Trigger{
     private:
-        char conditions;
-        char commands;
-        char owner;
-        char status;
+        std::string conditions;
+        std::string commands;
+        std::string owner;
+        std::string status;
 };
 
 #endif
