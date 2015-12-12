@@ -269,7 +269,18 @@ void interiorCommand(string command, Player *player, vector<Item> master_items, 
     }
     
     else if(command.find("delete") != string::npos || command.find("Delete") != string::npos){
-        
+        for(unsigned i; i < master_items.size(); i++){
+            if(command.find(master_items.at(i).getName()) != string::npos){
+                player->getCurrentRoom()->delItem(master_items.at(i).getName());
+                return;
+            }
+        }
+        for(unsigned i; i < master_creatures.size(); i++){
+            if(command.find(master_creatures.at(i).getName()) != string::npos){
+                player->getCurrentRoom()->delCreature(master_creatures.at(i).getName());
+                return;
+            }
+        }
     }
     
     else if(command.find("drop") != string::npos || command.find("Drop") != string::npos){

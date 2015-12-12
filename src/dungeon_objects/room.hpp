@@ -53,12 +53,13 @@ class Room: public Dungeon{
         void addItem(Item it);
         std::vector<Item> getItem(void);
         Item remItem(std::string it);
+        void delItem(std::string it);
         void addItemList(std::string it);
         std::vector<std::string> getItemList(void);
         void remItemList(std::string it);
         void addCreature(Creature creat);
         std::vector<Creature> getCreature(void);
-        void remCreature(std::string creat);
+        void delCreature(std::string creat);
         void addCreatureList(std::string creat);
         std::vector<std::string> getCreatureList(void);
         void remCreatureList(std::string creat);
@@ -131,6 +132,14 @@ Item Room::remItem(std::string it){
         }
     }
 }
+void Room::delItem(std::string it){
+    for(unsigned i = 0; i < item.size(); i++){
+        if(item.at(i).getName() == it){
+            item.erase(item.begin()+i);
+            return;
+        }
+    }
+}
 
 void Room::addItemList(std::string it){item_list.push_back(it);}
 std::vector<std::string> Room::getItemList(void){return item_list;}
@@ -146,7 +155,7 @@ void Room::remItemList(std::string it){
 //creature functions
 void Room::addCreature(Creature creat){creature.push_back(creat);}
 std::vector<Creature> Room::getCreature(void){return creature;}
-void Room::remCreature(std::string creat){
+void Room::delCreature(std::string creat){
     for(unsigned i = 0; i < creature.size(); i++){
         if(creat == creature.at(i).getName()){
             creature.erase(creature.begin()+i);
