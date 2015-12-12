@@ -252,6 +252,26 @@ void interiorCommand(string command, Player *player, vector<Item> master_items, 
         return;
     }
     
+    else if(command.find("add") != string::npos || command.find("Add") != string::npos){
+        for(unsigned i; i < master_items.size(); i++){
+            if(command.find(master_items.at(i).getName()) != string::npos){
+                player->getCurrentRoom()->addItem(master_items.at(i));
+                return;
+            }
+        }
+        for(unsigned i; i < master_creatures.size(); i++){
+            if(command.find(master_creatures.at(i).getName()) != string::npos){
+                player->getCurrentRoom()->addCreature(master_creatures.at(i));
+                return;
+            }
+        }
+        return;
+    }
+    
+    else if(command.find("delete") != string::npos || command.find("Delete") != string::npos){
+        
+    }
+    
     else if(command.find("drop") != string::npos || command.find("Drop") != string::npos){
         for(unsigned i = 0; i < player->getInventory().size(); i++){
             if(command.find(player->getInventory().at(i).getName()) != string::npos){
@@ -456,6 +476,10 @@ void getPlayerAction(Player *player, vector<Item> master_items, vector<Creature>
             }
         }
         cout<<"That is not in your inventory.\n";
+    }
+    
+    else if(command.find(">attack") != string::npos){
+        
     }
     
     return;
