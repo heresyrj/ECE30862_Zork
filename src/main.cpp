@@ -302,7 +302,7 @@ vector<Room> buildDungeon(vector<Room> rooms, vector<Item> items, vector<Contain
 
 //function to check triggers
 int checkTriggers(Player *player, Trigger *trigger, string command){
-    if(trigger->getLive() == 0){return 0;}
+    if(trigger->getTriggerFlag() == 1){return 0;}
     
     if(trigger->getCommand() != "\0"){
         if(command == trigger->getCommand()){
@@ -353,11 +353,52 @@ int checkTriggers(Player *player, Trigger *trigger, string command){
                 }
                 return 0;
             }
+            else{//trigger is an object status condition
+                for(unsigned i = 0; i < player->getInventory().size(); i++){
+                    if(player->getInventory().at(i).getName() == trigger->getObject()){
+                        if(player->getInventory().at(i).getStatus() == trigger->getStatus()){
+                            cout<<trigger->getText()<<"\n";
+                            if(trigger->getType() != "permanent"){
+                                trigger->setTriggerFlag(1);
+                            }
+                            return 1;
+                        }
+                        return 0;
+                    }
+                }
+                for(unsigned i = 0; i < player->getCurrentRoom()->getContainer().size(); i++){
+                    if(player->getCurrentRoom()->getContainer().at(i)->getName() == trigger->getObject()){
+                        if(player->getCurrentRoom()->getContainer().at(i)->getStatus() == trigger->getStatus()){
+                            cout<<trigger->getText()<<"\n";
+                            if(trigger->getType() != "permanent"){
+                                trigger->setTriggerFlag(1);
+                            }
+                            return 1;
+                        }
+                        return 0;
+                    }
+                    else{
+                        for(unsigned j = 0; j < player->getCurrentRoom()->getContainer().at(i)->getItem().size(); j++){
+                            if(player->getCurrentRoom()->getContainer().at(i)->getItem().at(j).getName() == trigger->getObject()){
+                                if(player->getCurrentRoom()->getContainer().at(i)->getItem().at(j).getStatus() == trigger->getStatus()){
+                                    cout<<trigger->getText()<<"\n";
+                                    if(trigger->getType() != "permanent"){
+                                        trigger->setTriggerFlag(1);
+                                    }
+                                    return 1;
+                                }
+                                return 0;
+                            }
+                        }
+                    }
+                }
+                return 0;
+            }
         }
         else{return 0;}
     }
-    else{
-        if(trigger->getHas() != "\0"){
+    else{//trigger has no command
+        if(trigger->getHas() != "\0"){ //trigger is object has/not have condition
             if(trigger->getHas() == "yes"){
                 if(trigger->getOwner() == "inventory"){
                     for(unsigned i = 0; i < player->getInventory().size(); i++){
@@ -395,6 +436,47 @@ int checkTriggers(Player *player, Trigger *trigger, string command){
                 }         
             }
         }
+        else{//trigger is object status condition
+            for(unsigned i = 0; i < player->getInventory().size(); i++){
+                if(player->getInventory().at(i).getName() == trigger->getObject()){
+                    if(player->getInventory().at(i).getStatus() == trigger->getStatus()){
+                        cout<<trigger->getText()<<"\n";
+                        if(trigger->getType() != "permanent"){
+                            trigger->setTriggerFlag(1);
+                        }
+                        return 1;
+                    }
+                    return 0;
+                }
+            }
+            for(unsigned i = 0; i < player->getCurrentRoom()->getContainer().size(); i++){
+                if(player->getCurrentRoom()->getContainer().at(i)->getName() == trigger->getObject()){
+                    if(player->getCurrentRoom()->getContainer().at(i)->getStatus() == trigger->getStatus()){
+                        cout<<trigger->getText()<<"\n";
+                        if(trigger->getType() != "permanent"){
+                            trigger->setTriggerFlag(1);
+                        }
+                        return 1;
+                    }
+                    return 0;
+                }
+                else{
+                    for(unsigned j = 0; j < player->getCurrentRoom()->getContainer().at(i)->getItem().size(); j++){
+                        if(player->getCurrentRoom()->getContainer().at(i)->getItem().at(j).getName() == trigger->getObject()){
+                            if(player->getCurrentRoom()->getContainer().at(i)->getItem().at(j).getStatus() == trigger->getStatus()){
+                                cout<<trigger->getText()<<"\n";
+                                if(trigger->getType() != "permanent"){
+                                    trigger->setTriggerFlag(1);
+                                }
+                                return 1;
+                            }
+                            return 0;
+                        }
+                    }
+                }
+            }
+            return 0;
+        }
         return 0;
     }
     return 0;
@@ -410,6 +492,22 @@ void interiorCommand(string command, Player *player, vector<Item> master_items, 
                 temp_item.setStatus(command.substr(found+1));
                 player->addItem(temp_item);
                 return;
+            }
+        }
+        for(unsigned i = 0; i < player->getCurrentRoom()->getContainer().size(); i++){
+            if(command.find(player->getCurrentRoom()->getContainer().at(i)->getName()) != string::npos){
+                player->getCurrentRoom()->getContainer().at(i)->setStatus(command.substr(found+1));
+                return;
+            }
+            else{
+                for(unsigned j = 0; j < player->getCurrentRoom()->getContainer().at(i)->getItem().size(); j++){
+                    if(command.find(player->getCurrentRoom()->getContainer().at(i)->getItem().at(j).getName()) != string::npos){
+                        Item temp_item = player->getCurrentRoom()->getContainer().at(i)->remItem(player->getCurrentRoom()->getContainer().at(i)->getItem().at(j).getName());
+                        temp_item.setStatus(command.substr(found+1));
+                        player->getCurrentRoom()->getContainer().at(i)->addItem(temp_item);
+                        return;
+                    }
+                }
             }
         }
         return;
@@ -473,6 +571,7 @@ void getPlayerAction(Player *player, vector<Item> master_items, vector<Creature>
     
     Trigger temp_trigger = player->getCurrentRoom()->getTrigger();
     trig = checkTriggers(player, &temp_trigger, command);
+    player->getCurrentRoom()->setTrigger(temp_trigger);
     
     if(command == "n"){
         if(trig == 1){return;}
