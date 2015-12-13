@@ -12,7 +12,7 @@ class Creature{
         std::vector<std::string> attackAction;
         std::string cond_object;
         std::string cond_status;
-        std::vector<Trigger> trigger;
+        Trigger trigger;
         
     public:
         Creature();
@@ -33,6 +33,8 @@ class Creature{
         std::string getAttackText(void);
         void addAttackAction(std::string action);
         std::vector<std::string> getAttackAction(void);
+        void setTrigger(Trigger trig);
+        Trigger getTrigger(void);
 };
 Creature::Creature(){}
 Creature::~Creature(){}
@@ -52,4 +54,6 @@ void Creature::setAttackText(std::string text){attackText = text;}
 std::string Creature::getAttackText(void){return attackText;}
 void Creature::addAttackAction(std::string action){attackAction.push_back(action);}
 std::vector<std::string> Creature::getAttackAction(void){return attackAction;}
+void Creature::setTrigger(Trigger trig){trigger = trig;}
+Trigger Creature::getTrigger(void){return trigger;}
 #endif

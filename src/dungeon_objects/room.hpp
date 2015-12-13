@@ -19,7 +19,7 @@ class Room: public Dungeon{
         std::vector<std::string> item_list;
         std::vector<Creature> creature;
         std::vector<std::string> creature_list;
-        std::vector<Trigger> trigger;
+        Trigger trigger;
         Room *north;
         Room *east;
         Room *south;
@@ -63,8 +63,8 @@ class Room: public Dungeon{
         void addCreatureList(std::string creat);
         std::vector<std::string> getCreatureList(void);
         void remCreatureList(std::string creat);
-        void addTrigger(Trigger trig);
-        void remTrigger(Trigger trig);
+        void setTrigger(Trigger trig);
+        Trigger getTrigger(void);
         void addBorder(Border bord);
         std::vector<Border> getBorder(void);
         void remBorder(std::string bord);
@@ -187,8 +187,8 @@ void Room::remBorder(std::string bord){
     }
 }
 
-void Room::addTrigger(Trigger trig){trigger.push_back(trig);}
-void Room::remTrigger(Trigger trig){trigger.push_back(trig);}
+void Room::setTrigger(Trigger trig){trigger = trig;}
+Trigger Room::getTrigger(void){return trigger;}
 
 
 #endif

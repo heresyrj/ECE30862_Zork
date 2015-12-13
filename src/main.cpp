@@ -35,6 +35,26 @@ Room parseRoom(xml_node<> *room_node){
             }
             new_room.addBorder(border);
         }
+        else if(sub_node == "trigger"){
+            Trigger trigger;
+            trigger.setLive(1);
+            for(xml_node<> *tri_node = pNode->first_node(); tri_node; tri_node = tri_node->next_sibling()){
+                sub_node = tri_node->name();
+                if(sub_node == "print"){trigger.setText(tri_node->value());}
+                else if(sub_node == "action"){trigger.addAction(tri_node->value());}
+                else if(sub_node == "type"){trigger.setType(tri_node->value());}
+                else if(sub_node == "condition"){
+                    for(xml_node<> *cond = tri_node->first_node(); cond; cond = cond->next_sibling()){
+                        sub_node = cond->name();
+                        if(sub_node == "object"){trigger.setObject(cond->value());}
+                        else if(sub_node == "status"){trigger.setStatus(cond->value());}
+                        else if(sub_node == "owner"){trigger.setOwner(cond->value());}
+                        else if(sub_node == "has"){trigger.setHas(cond->value());}
+                    }
+                }
+            }
+            new_room.setTrigger(trigger);
+        }
     }
     return new_room;
 }
@@ -75,6 +95,26 @@ Container parseContainer(xml_node<> *container_node){
         else if(sub_node == "status"){new_container.setStatus(pNode->value());}
         else if(sub_node == "accept"){new_container.setAccept(pNode->value());}
         else if(sub_node == "item"){new_container.addItemList(pNode->value());}
+        if(sub_node == "trigger"){
+            Trigger trigger;
+            trigger.setLive(1);
+            for(xml_node<> *con_node = pNode->first_node(); con_node; con_node = con_node->next_sibling()){
+                sub_node = con_node->name();
+                if(sub_node == "print"){trigger.setText(con_node->value());}
+                else if(sub_node == "action"){trigger.addAction(con_node->value());}
+                else if(sub_node == "type"){trigger.setType(con_node->value());}
+                else if(sub_node == "condition"){
+                    for(xml_node<> *cond = con_node->first_node(); cond; cond = cond->next_sibling()){
+                        sub_node = cond->name();
+                        if(sub_node == "object"){trigger.setObject(cond->value());}
+                        else if(sub_node == "status"){trigger.setStatus(cond->value());}
+                        else if(sub_node == "owner"){trigger.setOwner(cond->value());}
+                        else if(sub_node == "has"){trigger.setHas(cond->value());}
+                    }
+                }
+            }
+            new_container.setTrigger(trigger);
+        }
     }
     return new_container;
 }
@@ -86,9 +126,9 @@ Creature parseCreature(xml_node<> *creature_node){
     for(xml_node<> *pNode = creature_node->first_node(); pNode; pNode = pNode ->next_sibling()){
         sub_node = pNode->name();
         if(sub_node == "name"){new_creature.setName(pNode->value());}
-        if(sub_node == "status"){new_creature.setStatus(pNode->value());}
-        if(sub_node == "description"){new_creature.setDescription(pNode->value());}
-        if(sub_node == "vulnerability"){new_creature.setVulnerability(pNode->value());}
+        else if(sub_node == "status"){new_creature.setStatus(pNode->value());}
+        else if(sub_node == "description"){new_creature.setDescription(pNode->value());}
+        else if(sub_node == "vulnerability"){new_creature.setVulnerability(pNode->value());}
         if(sub_node == "attack"){
             for(xml_node<> *att_node = pNode->first_node(); att_node; att_node = att_node->next_sibling()){
                 sub_node = att_node->name();
@@ -105,18 +145,23 @@ Creature parseCreature(xml_node<> *creature_node){
         }
         if(sub_node == "trigger"){
             Trigger trigger;
-            for(xml_node<> *att_node = pNode->first_node(); att_node; att_node = att_node->next_sibling()){
-                sub_node = att_node->name();
-                if(sub_node == "print"){trigger.setAttackText(att_node->value());}
-                if(sub_node == "action"){new_creature.addAttackAction(att_node->value());}
-                if(sub_node == "condition"){
-                    for(xml_node<> *cond = att_node->first_node(); cond; cond = cond->next_sibling()){
+            trigger.setLive(1);
+            for(xml_node<> *tri_node = pNode->first_node(); tri_node; tri_node = tri_node->next_sibling()){
+                sub_node = tri_node->name();
+                if(sub_node == "print"){trigger.setText(tri_node->value());}
+                else if(sub_node == "action"){trigger.addAction(tri_node->value());}
+                else if(sub_node == "type"){trigger.setType(tri_node->value());}
+                else if(sub_node == "condition"){
+                    for(xml_node<> *cond = tri_node->first_node(); cond; cond = cond->next_sibling()){
                         sub_node = cond->name();
-                        if(sub_node == "object"){new_creature.setCondObject(cond->value());}
-                        else if(sub_node == "status"){new_creature.setCondStatus(cond->value());}
+                        if(sub_node == "object"){trigger.setObject(cond->value());}
+                        else if(sub_node == "status"){trigger.setStatus(cond->value());}
+                        else if(sub_node == "owner"){trigger.setOwner(cond->value());}
+                        else if(sub_node == "has"){trigger.setHas(cond->value());}
                     }
                 }
             }
+            new_creature.setTrigger(trigger);
         }
     }
     return new_creature;
@@ -252,6 +297,11 @@ vector<Room> buildDungeon(vector<Room> rooms, vector<Item> items, vector<Contain
     return rooms;
 }
 
+//function to check triggers
+int checkTriggers(Player *player){
+    return 0;
+}
+
 //function that handles internal commands
 void interiorCommand(string command, Player *player, vector<Item> master_items, vector<Creature> master_creatures){
     if(command.find("update") != string::npos || command.find("Update") != string::npos){
@@ -307,6 +357,10 @@ void interiorCommand(string command, Player *player, vector<Item> master_items, 
             }
         }
     }
+    
+    else if(command.find("Game Over") != string::npos){
+        player->setExitFlag(1);
+    }
     return;
 }
 
@@ -317,8 +371,12 @@ void getPlayerAction(Player *player, vector<Item> master_items, vector<Creature>
     vector<Container*> containers;
     Item moved_item;
     getline(cin,command);
-
+    int trig = 0;
+    
     if(command == "n"){
+        if(player->getCurrentRoom()->getTrigger().getLive() != 1){
+            
+        }
         if(player->getCurrentRoom()->getNorth() != NULL){
             player->setCurrentRoom(player->getCurrentRoom()->getNorth());
             cout<<player->getCurrentRoom()->getDescription()<<"\n";
@@ -559,6 +617,7 @@ int main(int argc, char **argv){
     
     while(player.getExitFlag() == 0){
         getPlayerAction(&player, items, creatures);
+        //cout<<player.getCurrentRoom()->getTrigger().getText()<<"\n";
     }
     
     cout<<"Game Over\n";
