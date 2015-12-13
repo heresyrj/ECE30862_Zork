@@ -310,7 +310,10 @@ int checkTriggers(Player *player, Trigger *trigger, string command){
                 if(trigger->getHas() == "yes"){
                     if(trigger->getOwner() == "inventory"){
                         for(unsigned i = 0; i < player->getInventory().size(); i++){
-                            if(player->getInventory().at(i).getName() == trigger->getObject()){return 1;}
+                            if(player->getInventory().at(i).getName() == trigger->getObject()){
+                                cout<<trigger->getText()<<"\n";
+                                return 1;
+                            }
                         }
                         return 0;
                     }
@@ -318,7 +321,10 @@ int checkTriggers(Player *player, Trigger *trigger, string command){
                         for(unsigned i = 0; i < player->getCurrentRoom()->getContainer().size(); i++){
                             if(player->getCurrentRoom()->getContainer().at(i)->getName() == trigger->getOwner()){
                                 for(unsigned j = 0; j < player->getCurrentRoom()->getContainer().at(i)->getItem().size(); j++){
-                                    if(player->getCurrentRoom()->getContainer().at(i)->getItem().at(j).getName() == trigger->getObject()){return 1;}
+                                    if(player->getCurrentRoom()->getContainer().at(i)->getItem().at(j).getName() == trigger->getObject()){
+                                        cout<<trigger->getText()<<"\n";
+                                        return 1;
+                                    }
                                 }
                                 return 0;
                             }
@@ -330,6 +336,7 @@ int checkTriggers(Player *player, Trigger *trigger, string command){
                         for(unsigned i = 0; i < player->getInventory().size(); i++){
                             if(player->getInventory().at(i).getName() == trigger->getObject()){return 0;}
                         }
+                        cout<<trigger->getText()<<"\n";
                         return 1;
                     }
                     else{
@@ -338,6 +345,7 @@ int checkTriggers(Player *player, Trigger *trigger, string command){
                                 for(unsigned j = 0; j < player->getCurrentRoom()->getContainer().at(i)->getItem().size(); j++){
                                     if(player->getCurrentRoom()->getContainer().at(i)->getItem().at(j).getName() == trigger->getObject()){return 0;}
                                 }
+                                cout<<trigger->getText()<<"\n";
                                 return 1;
                             }
                         }
