@@ -17,7 +17,7 @@ class Room: public Dungeon{
         std::vector<std::string> container_list;
         std::vector<Item> item;
         std::vector<std::string> item_list;
-        std::vector<Creature> creature;
+        std::vector<Creature*> creature;
         std::vector<std::string> creature_list;
         Trigger trigger;
         Room *north;
@@ -57,8 +57,8 @@ class Room: public Dungeon{
         void addItemList(std::string it);
         std::vector<std::string> getItemList(void);
         void remItemList(std::string it);
-        void addCreature(Creature creat);
-        std::vector<Creature> getCreature(void);
+        void addCreature(Creature *creat);
+        std::vector<Creature*> getCreature(void);
         void delCreature(std::string creat);
         void addCreatureList(std::string creat);
         std::vector<std::string> getCreatureList(void);
@@ -153,11 +153,11 @@ void Room::remItemList(std::string it){
 }
 
 //creature functions
-void Room::addCreature(Creature creat){creature.push_back(creat);}
-std::vector<Creature> Room::getCreature(void){return creature;}
+void Room::addCreature(Creature* creat){creature.push_back(creat);}
+std::vector<Creature*> Room::getCreature(void){return creature;}
 void Room::delCreature(std::string creat){
     for(unsigned i = 0; i < creature.size(); i++){
-        if(creat == creature.at(i).getName()){
+        if(creat == creature.at(i)->getName()){
             creature.erase(creature.begin()+i);
             return;
         }

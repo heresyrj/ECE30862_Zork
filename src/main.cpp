@@ -263,7 +263,7 @@ vector<Container> buildContainers(vector<Container> containers, vector<Item> ite
 }
 
 //populates the rooms with their items, containers, and creatures
-vector<Room> buildDungeon(vector<Room> rooms, vector<Item> items, vector<Container*> containers, vector<Creature> creatures){
+vector<Room> buildDungeon(vector<Room> rooms, vector<Item> items, vector<Container*> containers, vector<Creature*> creatures){
     vector<string> item_list, container_list, creature_list;
     
     //populates the rooms with their appropriate items, containers, and creatures
@@ -290,7 +290,7 @@ vector<Room> buildDungeon(vector<Room> rooms, vector<Item> items, vector<Contain
         //creatures
         for(unsigned j = 0; j < creature_list.size(); j++){
             for(unsigned k = 0; k < creatures.size(); k++){
-                if(creature_list.at(j) == creatures.at(k).getName()){
+                if(creature_list.at(j) == creatures.at(k)->getName()){
                     rooms.at(i).addCreature(creatures.at(k));
                 }
             }
@@ -304,7 +304,7 @@ vector<Room> buildDungeon(vector<Room> rooms, vector<Item> items, vector<Contain
 int checkTriggers(Player *player, Trigger *trigger, string command){
     if(trigger->getTriggerFlag() == 1){return 0;}
     
-    if(trigger->getCommand() != "\0"){
+    else if(trigger->getCommand() != "\0"){//trigger has a specific command
         if(command == trigger->getCommand()){
             if(trigger->getHas() != "\0"){
                 if(trigger->getHas() == "yes"){
@@ -402,7 +402,13 @@ int checkTriggers(Player *player, Trigger *trigger, string command){
             if(trigger->getHas() == "yes"){
                 if(trigger->getOwner() == "inventory"){
                     for(unsigned i = 0; i < player->getInventory().size(); i++){
-                        if(player->getInventory().at(i).getName() == trigger->getObject()){return 1;}
+                        if(player->getInventory().at(i).getName() == trigger->getObject()){
+                            cout<<trigger->getText()<<"\n";
+                            if(trigger->getType() != "permanent"){
+                                trigger->setTriggerFlag(1);
+                            }
+                            return 1;
+                        }
                     }
                     return 0;
                 }
@@ -522,7 +528,7 @@ void interiorCommand(string command, Player *player, vector<Item> master_items, 
         }
         for(unsigned i; i < master_creatures.size(); i++){
             if(command.find(master_creatures.at(i).getName()) != string::npos){
-                player->getCurrentRoom()->addCreature(master_creatures.at(i));
+                player->getCurrentRoom()->addCreature(&master_creatures.at(i));
                 return;
             }
         }
@@ -775,6 +781,8 @@ int main(int argc, char **argv){
     vector<Container> containers;
     vector<Container*> cont_refs;
     vector<Creature> creatures;
+    vector<Creature*> creat_refs;
+    int trig = 0;
     
     rooms = parseXMLRooms(argv[1]);
     items = parseXMLItems(argv[1]);
@@ -783,8 +791,11 @@ int main(int argc, char **argv){
         cont_refs.push_back(&containers.at(i));
     }
     creatures = parseXMLCreatures(argv[1]);
+    for(unsigned i = 0; i < creatures.size(); i++){
+        creat_refs.push_back(&creatures.at(i));
+    }
     containers = buildContainers(containers, items);
-    rooms = buildDungeon(rooms, items, cont_refs, creatures);
+    rooms = buildDungeon(rooms, items, cont_refs, creat_refs);
     
     //conncects the rooms together
     for(unsigned i = 0; i < rooms.size(); i++){
@@ -815,7 +826,17 @@ int main(int argc, char **argv){
     
     while(player.getExitFlag() == 0){
         getPlayerAction(&player, items, creatures);
-        //cout<<player.getCurrentRoom()->getTrigger().getText()<<"\n";
+        
+        Trigger temp_trigger = player.getCurrentRoom()->getTrigger();
+        trig = checkTriggers(&player, &temp_trigger, "");
+        //player.getCurrentRoom()->setTrigger(temp_trigger);
+        
+        for(unsigned i = 0; i < player.getCurrentRoom()->getCreature().size(); i++){
+            temp_trigger = player.getCurrentRoom()->getCreature().at(i)->getTrigger();
+            trig = checkTriggers(&player, &temp_trigger, "");
+            player.getCurrentRoom()->getCreature().at(i)->setTrigger(temp_trigger);
+            
+        }
     }
     
     cout<<"Game Over\n";
