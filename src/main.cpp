@@ -43,6 +43,7 @@ Room parseRoom(xml_node<> *room_node){
                 if(sub_node == "print"){trigger.setText(tri_node->value());}
                 else if(sub_node == "action"){trigger.addAction(tri_node->value());}
                 else if(sub_node == "type"){trigger.setType(tri_node->value());}
+                else if(sub_node == "command"){trigger.setCommand(tri_node->value());}
                 else if(sub_node == "condition"){
                     for(xml_node<> *cond = tri_node->first_node(); cond; cond = cond->next_sibling()){
                         sub_node = cond->name();
@@ -98,13 +99,14 @@ Container parseContainer(xml_node<> *container_node){
         if(sub_node == "trigger"){
             Trigger trigger;
             trigger.setLive(1);
-            for(xml_node<> *con_node = pNode->first_node(); con_node; con_node = con_node->next_sibling()){
-                sub_node = con_node->name();
-                if(sub_node == "print"){trigger.setText(con_node->value());}
-                else if(sub_node == "action"){trigger.addAction(con_node->value());}
-                else if(sub_node == "type"){trigger.setType(con_node->value());}
+            for(xml_node<> *tri_node = pNode->first_node(); tri_node; tri_node = tri_node->next_sibling()){
+                sub_node = tri_node->name();
+                if(sub_node == "print"){trigger.setText(tri_node->value());}
+                else if(sub_node == "action"){trigger.addAction(tri_node->value());}
+                else if(sub_node == "type"){trigger.setType(tri_node->value());}
+                else if(sub_node == "command"){trigger.setCommand(tri_node->value());}
                 else if(sub_node == "condition"){
-                    for(xml_node<> *cond = con_node->first_node(); cond; cond = cond->next_sibling()){
+                    for(xml_node<> *cond = tri_node->first_node(); cond; cond = cond->next_sibling()){
                         sub_node = cond->name();
                         if(sub_node == "object"){trigger.setObject(cond->value());}
                         else if(sub_node == "status"){trigger.setStatus(cond->value());}
@@ -151,6 +153,7 @@ Creature parseCreature(xml_node<> *creature_node){
                 if(sub_node == "print"){trigger.setText(tri_node->value());}
                 else if(sub_node == "action"){trigger.addAction(tri_node->value());}
                 else if(sub_node == "type"){trigger.setType(tri_node->value());}
+                else if(sub_node == "command"){trigger.setCommand(tri_node->value());}
                 else if(sub_node == "condition"){
                     for(xml_node<> *cond = tri_node->first_node(); cond; cond = cond->next_sibling()){
                         sub_node = cond->name();
@@ -298,7 +301,94 @@ vector<Room> buildDungeon(vector<Room> rooms, vector<Item> items, vector<Contain
 }
 
 //function to check triggers
-int checkTriggers(Player *player){
+int checkTriggers(Player *player, Trigger *trigger, string command){
+    if(trigger->getLive() == 0){return 0;}
+    
+    if(trigger->getCommand() != "\0"){
+        if(command == trigger->getCommand()){
+            if(trigger->getHas() != "\0"){
+                if(trigger->getHas() == "yes"){
+                    if(trigger->getOwner() == "inventory"){
+                        for(unsigned i = 0; i < player->getInventory().size(); i++){
+                            if(player->getInventory().at(i).getName() == trigger->getObject()){return 1;}
+                        }
+                        return 0;
+                    }
+                    else{
+                        for(unsigned i = 0; i < player->getCurrentRoom()->getContainer().size(); i++){
+                            if(player->getCurrentRoom()->getContainer().at(i)->getName() == trigger->getOwner()){
+                                for(unsigned j = 0; j < player->getCurrentRoom()->getContainer().at(i)->getItem().size(); j++){
+                                    if(player->getCurrentRoom()->getContainer().at(i)->getItem().at(j).getName() == trigger->getObject()){return 1;}
+                                }
+                                return 0;
+                            }
+                        }
+                    }
+                }
+                else if(trigger->getHas() == "no"){
+                    if(trigger->getOwner() == "inventory"){
+                        for(unsigned i = 0; i < player->getInventory().size(); i++){
+                            if(player->getInventory().at(i).getName() == trigger->getObject()){return 0;}
+                        }
+                        return 1;
+                    }
+                    else{
+                        for(unsigned i = 0; i < player->getCurrentRoom()->getContainer().size(); i++){
+                            if(player->getCurrentRoom()->getContainer().at(i)->getName() == trigger->getOwner()){
+                                for(unsigned j = 0; j < player->getCurrentRoom()->getContainer().at(i)->getItem().size(); j++){
+                                    if(player->getCurrentRoom()->getContainer().at(i)->getItem().at(j).getName() == trigger->getObject()){return 0;}
+                                }
+                                return 1;
+                            }
+                        }
+                    }         
+                }
+                return 0;
+            }
+        }
+        else{return 0;}
+    }
+    else{
+        if(trigger->getHas() != "\0"){
+            if(trigger->getHas() == "yes"){
+                if(trigger->getOwner() == "inventory"){
+                    for(unsigned i = 0; i < player->getInventory().size(); i++){
+                        if(player->getInventory().at(i).getName() == trigger->getObject()){return 1;}
+                    }
+                    return 0;
+                }
+                else{
+                    for(unsigned i = 0; i < player->getCurrentRoom()->getContainer().size(); i++){
+                        if(player->getCurrentRoom()->getContainer().at(i)->getName() == trigger->getOwner()){
+                            for(unsigned j = 0; j < player->getCurrentRoom()->getContainer().at(i)->getItem().size(); j++){
+                                if(player->getCurrentRoom()->getContainer().at(i)->getItem().at(j).getName() == trigger->getObject()){return 1;}
+                            }
+                            return 0;
+                        }
+                    }
+                }
+            }
+            else if(trigger->getHas() == "no"){
+                if(trigger->getOwner() == "inventory"){
+                    for(unsigned i = 0; i < player->getInventory().size(); i++){
+                        if(player->getInventory().at(i).getName() == trigger->getObject()){return 0;}
+                    }
+                    return 1;
+                }
+                else{
+                    for(unsigned i = 0; i < player->getCurrentRoom()->getContainer().size(); i++){
+                        if(player->getCurrentRoom()->getContainer().at(i)->getName() == trigger->getOwner()){
+                            for(unsigned j = 0; j < player->getCurrentRoom()->getContainer().at(i)->getItem().size(); j++){
+                                if(player->getCurrentRoom()->getContainer().at(i)->getItem().at(j).getName() == trigger->getObject()){return 0;}
+                            }
+                            return 1;
+                        }
+                    }
+                }         
+            }
+        }
+        return 0;
+    }
     return 0;
 }
 
@@ -373,10 +463,11 @@ void getPlayerAction(Player *player, vector<Item> master_items, vector<Creature>
     getline(cin,command);
     int trig = 0;
     
+    Trigger temp_trigger = player->getCurrentRoom()->getTrigger();
+    trig = checkTriggers(player, &temp_trigger, command);
+    
     if(command == "n"){
-        if(player->getCurrentRoom()->getTrigger().getLive() != 1){
-            
-        }
+        if(trig == 1){return;}
         if(player->getCurrentRoom()->getNorth() != NULL){
             player->setCurrentRoom(player->getCurrentRoom()->getNorth());
             cout<<player->getCurrentRoom()->getDescription()<<"\n";
