@@ -9,6 +9,9 @@
 using namespace std;
 using namespace rapidxml;
 
+vector<Item> master_items;
+vector<Creature> master_creatures;
+
 Room parseRoom(xml_node<> *room_node){
     string sub_node;
     Room new_room;
@@ -300,6 +303,86 @@ vector<Room> buildDungeon(vector<Room> rooms, vector<Item> items, vector<Contain
     return rooms;
 }
 
+//function that handles internal commands
+void interiorCommand(string command, Player *player){
+    Room *currentRoom = player->getCurrentRoom();
+
+    if(command.find("update") != string::npos || command.find("Update") != string::npos){
+        size_t found = command.find_last_of(" ");
+        for(unsigned i = 0; i < player->getInventory().size(); i++){
+            if(command.find(player->getInventory().at(i).getName()) != string::npos){
+                Item temp_item = player->remItem(player->getInventory().at(i).getName());
+                temp_item.setStatus(command.substr(found+1));
+                player->addItem(temp_item);
+                return;
+            }
+        }
+        for(unsigned i = 0; i < player->getCurrentRoom()->getContainer().size(); i++){
+            if(command.find(player->getCurrentRoom()->getContainer().at(i)->getName()) != string::npos){
+                player->getCurrentRoom()->getContainer().at(i)->setStatus(command.substr(found+1));
+                return;
+            }
+            else{
+                for(unsigned j = 0; j < player->getCurrentRoom()->getContainer().at(i)->getItem().size(); j++){
+                    if(command.find(player->getCurrentRoom()->getContainer().at(i)->getItem().at(j).getName()) != string::npos){
+                        Item temp_item = player->getCurrentRoom()->getContainer().at(i)->remItem(player->getCurrentRoom()->getContainer().at(i)->getItem().at(j).getName());
+                        temp_item.setStatus(command.substr(found+1));
+                        player->getCurrentRoom()->getContainer().at(i)->addItem(temp_item);
+                        return;
+                    }
+                }
+            }
+        }
+        return;
+    }
+    
+    else if(command.find("add") != string::npos || command.find("Add") != string::npos){
+        for(unsigned i; i < master_items.size(); i++){
+            if(command.find(master_items.at(i).getName()) != string::npos){
+                player->getCurrentRoom()->addItem(master_items.at(i));
+                return;
+            }
+        }
+        for(unsigned i; i < master_creatures.size(); i++){
+            if(command.find(master_creatures.at(i).getName()) != string::npos){
+                player->getCurrentRoom()->addCreature(&master_creatures.at(i));
+                return;
+            }
+        }
+        return;
+    }
+    
+    else if(command.find("delete") != string::npos || command.find("Delete") != string::npos){
+        for(unsigned i; i < player->getCurrentRoom()->getItem().size(); i++){
+            if(command.find(player->getCurrentRoom()->getItem().at(i).getName()) != string::npos){
+                player->getCurrentRoom()->delItem(player->getCurrentRoom()->getItem().at(i).getName());
+                return;
+            }
+        }
+        for(unsigned i; i < player->getCurrentRoom()->getCreature().size(); i++){
+            if(command.find(player->getCurrentRoom()->getCreature().at(i)->getName()) != string::npos){
+                player->getCurrentRoom()->delCreature(player->getCurrentRoom()->getCreature().at(i)->getName());
+                return;
+            }
+        }
+    }
+    
+    else if(command.find("drop") != string::npos || command.find("Drop") != string::npos){
+        for(unsigned i = 0; i < player->getInventory().size(); i++){
+            if(command.find(player->getInventory().at(i).getName()) != string::npos){
+                Item temp_item = player->remItem(player->getInventory().at(i).getName());
+                player->getCurrentRoom()->addItem(temp_item);
+                return;
+            }
+        }
+    }
+    
+    else if(command.find("Game Over") != string::npos){
+        player->setExitFlag(1);
+    }
+    return;
+}
+
 //function to check triggers
 int checkTriggers(Player *player, Trigger *trigger, string command){
     if(trigger->getTriggerFlag() == 1){return 0;}
@@ -404,6 +487,10 @@ int checkTriggers(Player *player, Trigger *trigger, string command){
                     for(unsigned i = 0; i < player->getInventory().size(); i++){
                         if(player->getInventory().at(i).getName() == trigger->getObject()){
                             cout<<trigger->getText()<<"\n";
+                            for(unsigned j = 0; j < trigger->getAction().size(); j++){
+                                cout<<trigger->getAction().at(i)<<"\n";
+                                interiorCommand(trigger->getAction().at(i), player);
+                            }
                             if(trigger->getType() != "permanent"){
                                 trigger->setTriggerFlag(1);
                             }
@@ -488,86 +575,8 @@ int checkTriggers(Player *player, Trigger *trigger, string command){
     return 0;
 }
 
-//function that handles internal commands
-void interiorCommand(string command, Player *player, vector<Item> master_items, vector<Creature> master_creatures){
-    if(command.find("update") != string::npos || command.find("Update") != string::npos){
-        size_t found = command.find_last_of(" ");
-        for(unsigned i = 0; i < player->getInventory().size(); i++){
-            if(command.find(player->getInventory().at(i).getName()) != string::npos){
-                Item temp_item = player->remItem(player->getInventory().at(i).getName());
-                temp_item.setStatus(command.substr(found+1));
-                player->addItem(temp_item);
-                return;
-            }
-        }
-        for(unsigned i = 0; i < player->getCurrentRoom()->getContainer().size(); i++){
-            if(command.find(player->getCurrentRoom()->getContainer().at(i)->getName()) != string::npos){
-                player->getCurrentRoom()->getContainer().at(i)->setStatus(command.substr(found+1));
-                return;
-            }
-            else{
-                for(unsigned j = 0; j < player->getCurrentRoom()->getContainer().at(i)->getItem().size(); j++){
-                    if(command.find(player->getCurrentRoom()->getContainer().at(i)->getItem().at(j).getName()) != string::npos){
-                        Item temp_item = player->getCurrentRoom()->getContainer().at(i)->remItem(player->getCurrentRoom()->getContainer().at(i)->getItem().at(j).getName());
-                        temp_item.setStatus(command.substr(found+1));
-                        player->getCurrentRoom()->getContainer().at(i)->addItem(temp_item);
-                        return;
-                    }
-                }
-            }
-        }
-        return;
-    }
-    
-    else if(command.find("add") != string::npos || command.find("Add") != string::npos){
-        for(unsigned i; i < master_items.size(); i++){
-            if(command.find(master_items.at(i).getName()) != string::npos){
-                player->getCurrentRoom()->addItem(master_items.at(i));
-                return;
-            }
-        }
-        for(unsigned i; i < master_creatures.size(); i++){
-            if(command.find(master_creatures.at(i).getName()) != string::npos){
-                player->getCurrentRoom()->addCreature(&master_creatures.at(i));
-                return;
-            }
-        }
-        return;
-    }
-    
-    else if(command.find("delete") != string::npos || command.find("Delete") != string::npos){
-        for(unsigned i; i < master_items.size(); i++){
-            if(command.find(master_items.at(i).getName()) != string::npos){
-                player->getCurrentRoom()->delItem(master_items.at(i).getName());
-                return;
-            }
-        }
-        for(unsigned i; i < master_creatures.size(); i++){
-            if(command.find(master_creatures.at(i).getName()) != string::npos){
-                player->getCurrentRoom()->delCreature(master_creatures.at(i).getName());
-                return;
-            }
-        }
-    }
-    
-    else if(command.find("drop") != string::npos || command.find("Drop") != string::npos){
-        for(unsigned i = 0; i < player->getInventory().size(); i++){
-            if(command.find(player->getInventory().at(i).getName()) != string::npos){
-                Item temp_item = player->remItem(player->getInventory().at(i).getName());
-                player->getCurrentRoom()->addItem(temp_item);
-                return;
-            }
-        }
-    }
-    
-    else if(command.find("Game Over") != string::npos){
-        player->setExitFlag(1);
-    }
-    return;
-}
-
 //function that handles player commands
-void getPlayerAction(Player *player, vector<Item> master_items, vector<Creature> master_creatures){
+void getPlayerAction(Player *player){
     string command;
     vector<Item> items;
     vector<Container*> containers;
@@ -757,7 +766,7 @@ void getPlayerAction(Player *player, vector<Item> master_items, vector<Creature>
                     cout<<player->getInventory().at(i).getTurnOnText()<<"\n";
                 }
                 for(unsigned j = 0; j < player->getInventory().at(i).getTurnOnAction().size(); j++){
-                    interiorCommand(player->getInventory().at(i).getTurnOnAction().at(j), player, master_items, master_creatures);
+                    interiorCommand(player->getInventory().at(i).getTurnOnAction().at(j), player);
                     if(player->getInventory().size() == 0){return;}
                 }
                 return;
@@ -776,26 +785,24 @@ void getPlayerAction(Player *player, vector<Item> master_items, vector<Creature>
 //main function
 int main(int argc, char **argv){
     vector<Room> rooms;
-    vector<Item> items;
     //vector<Item*> item_refs; //if we want to change items to references
     vector<Container> containers;
     vector<Container*> cont_refs;
-    vector<Creature> creatures;
     vector<Creature*> creat_refs;
     int trig = 0;
     
     rooms = parseXMLRooms(argv[1]);
-    items = parseXMLItems(argv[1]);
+    master_items = parseXMLItems(argv[1]);
     containers = parseXMLContainers(argv[1]);
     for(unsigned i = 0; i < containers.size(); i++){
         cont_refs.push_back(&containers.at(i));
     }
-    creatures = parseXMLCreatures(argv[1]);
-    for(unsigned i = 0; i < creatures.size(); i++){
-        creat_refs.push_back(&creatures.at(i));
+    master_creatures = parseXMLCreatures(argv[1]);
+    for(unsigned i = 0; i < master_creatures.size(); i++){
+        creat_refs.push_back(&master_creatures.at(i));
     }
-    containers = buildContainers(containers, items);
-    rooms = buildDungeon(rooms, items, cont_refs, creat_refs);
+    containers = buildContainers(containers, master_items);
+    rooms = buildDungeon(rooms, master_items, cont_refs, creat_refs);
     
     //conncects the rooms together
     for(unsigned i = 0; i < rooms.size(); i++){
@@ -825,11 +832,11 @@ int main(int argc, char **argv){
     cout<<player.getCurrentRoom()->getDescription()<<"\n";
     
     while(player.getExitFlag() == 0){
-        getPlayerAction(&player, items, creatures);
+        getPlayerAction(&player);
         
         Trigger temp_trigger = player.getCurrentRoom()->getTrigger();
         trig = checkTriggers(&player, &temp_trigger, "");
-        //player.getCurrentRoom()->setTrigger(temp_trigger);
+        player.getCurrentRoom()->setTrigger(temp_trigger);
         
         for(unsigned i = 0; i < player.getCurrentRoom()->getCreature().size(); i++){
             temp_trigger = player.getCurrentRoom()->getCreature().at(i)->getTrigger();
@@ -837,6 +844,7 @@ int main(int argc, char **argv){
             player.getCurrentRoom()->getCreature().at(i)->setTrigger(temp_trigger);
             
         }
+        
     }
     
     cout<<"Game Over\n";
