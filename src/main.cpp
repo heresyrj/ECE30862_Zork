@@ -133,7 +133,7 @@ Creature parseCreature(xml_node<> *creature_node){
         if(sub_node == "name"){new_creature.setName(pNode->value());}
         else if(sub_node == "status"){new_creature.setStatus(pNode->value());}
         else if(sub_node == "description"){new_creature.setDescription(pNode->value());}
-        else if(sub_node == "vulnerability"){new_creature.setVulnerability(pNode->value());}
+        else if(sub_node == "vulnerability"){new_creature.addVulnerability(pNode->value());}
         if(sub_node == "attack"){
             for(xml_node<> *att_node = pNode->first_node(); att_node; att_node = att_node->next_sibling()){
                 sub_node = att_node->name();
@@ -304,8 +304,7 @@ vector<Room> buildDungeon(vector<Room> rooms, vector<Item> items, vector<Contain
 }
 
 //function that handles internal commands
-void interiorCommand(string command, Player *player){
-    Room *currentRoom = player->getCurrentRoom();
+void interiorCommand(string command, Player *player, Room *currentRoom){
 
     if(command.find("update") != string::npos || command.find("Update") != string::npos){
         size_t found = command.find_last_of(" ");
@@ -337,13 +336,13 @@ void interiorCommand(string command, Player *player){
     }
     
     else if(command.find("add") != string::npos || command.find("Add") != string::npos){
-        for(unsigned i; i < master_items.size(); i++){
+        for(unsigned i = 0; i < master_items.size(); i++){
             if(command.find(master_items.at(i).getName()) != string::npos){
                 player->getCurrentRoom()->addItem(master_items.at(i));
                 return;
             }
         }
-        for(unsigned i; i < master_creatures.size(); i++){
+        for(unsigned i = 0; i < master_creatures.size(); i++){
             if(command.find(master_creatures.at(i).getName()) != string::npos){
                 player->getCurrentRoom()->addCreature(&master_creatures.at(i));
                 return;
@@ -353,15 +352,15 @@ void interiorCommand(string command, Player *player){
     }
     
     else if(command.find("delete") != string::npos || command.find("Delete") != string::npos){
-        for(unsigned i; i < player->getCurrentRoom()->getItem().size(); i++){
-            if(command.find(player->getCurrentRoom()->getItem().at(i).getName()) != string::npos){
-                player->getCurrentRoom()->delItem(player->getCurrentRoom()->getItem().at(i).getName());
+        for(unsigned i = 0; i < currentRoom->getItem().size(); i++){
+            if(command.find(currentRoom->getItem().at(i).getName()) != string::npos){
+                currentRoom->delItem(currentRoom->getItem().at(i).getName());
                 return;
             }
         }
-        for(unsigned i; i < player->getCurrentRoom()->getCreature().size(); i++){
-            if(command.find(player->getCurrentRoom()->getCreature().at(i)->getName()) != string::npos){
-                player->getCurrentRoom()->delCreature(player->getCurrentRoom()->getCreature().at(i)->getName());
+        for(unsigned i = 0; i < currentRoom->getCreature().size(); i++){
+            if(command.find(currentRoom->getCreature().at(i)->getName()) != string::npos){
+                currentRoom->delCreature(currentRoom->getCreature().at(i)->getName());
                 return;
             }
         }
@@ -380,216 +379,8 @@ void interiorCommand(string command, Player *player){
     else if(command.find("Game Over") != string::npos){
         player->setExitFlag(1);
     }
-    return;
-}
-
-//function to check triggers
-int checkTriggers(Player *player, Trigger *trigger, string command){
-    if(trigger->getTriggerFlag() == 1){return 0;}
     
-    else if(trigger->getCommand() != "\0"){//trigger has a specific command
-        if(command == trigger->getCommand()){
-            if(trigger->getHas() != "\0"){
-                if(trigger->getHas() == "yes"){
-                    if(trigger->getOwner() == "inventory"){
-                        for(unsigned i = 0; i < player->getInventory().size(); i++){
-                            if(player->getInventory().at(i).getName() == trigger->getObject()){
-                                cout<<trigger->getText()<<"\n";
-                                return 1;
-                            }
-                        }
-                        return 0;
-                    }
-                    else{
-                        for(unsigned i = 0; i < player->getCurrentRoom()->getContainer().size(); i++){
-                            if(player->getCurrentRoom()->getContainer().at(i)->getName() == trigger->getOwner()){
-                                for(unsigned j = 0; j < player->getCurrentRoom()->getContainer().at(i)->getItem().size(); j++){
-                                    if(player->getCurrentRoom()->getContainer().at(i)->getItem().at(j).getName() == trigger->getObject()){
-                                        cout<<trigger->getText()<<"\n";
-                                        return 1;
-                                    }
-                                }
-                                return 0;
-                            }
-                        }
-                    }
-                }
-                else if(trigger->getHas() == "no"){
-                    if(trigger->getOwner() == "inventory"){
-                        for(unsigned i = 0; i < player->getInventory().size(); i++){
-                            if(player->getInventory().at(i).getName() == trigger->getObject()){return 0;}
-                        }
-                        cout<<trigger->getText()<<"\n";
-                        return 1;
-                    }
-                    else{
-                        for(unsigned i = 0; i < player->getCurrentRoom()->getContainer().size(); i++){
-                            if(player->getCurrentRoom()->getContainer().at(i)->getName() == trigger->getOwner()){
-                                for(unsigned j = 0; j < player->getCurrentRoom()->getContainer().at(i)->getItem().size(); j++){
-                                    if(player->getCurrentRoom()->getContainer().at(i)->getItem().at(j).getName() == trigger->getObject()){return 0;}
-                                }
-                                cout<<trigger->getText()<<"\n";
-                                return 1;
-                            }
-                        }
-                    }         
-                }
-                return 0;
-            }
-            else{//trigger is an object status condition
-                for(unsigned i = 0; i < player->getInventory().size(); i++){
-                    if(player->getInventory().at(i).getName() == trigger->getObject()){
-                        if(player->getInventory().at(i).getStatus() == trigger->getStatus()){
-                            cout<<trigger->getText()<<"\n";
-                            if(trigger->getType() != "permanent"){
-                                trigger->setTriggerFlag(1);
-                            }
-                            return 1;
-                        }
-                        return 0;
-                    }
-                }
-                for(unsigned i = 0; i < player->getCurrentRoom()->getContainer().size(); i++){
-                    if(player->getCurrentRoom()->getContainer().at(i)->getName() == trigger->getObject()){
-                        if(player->getCurrentRoom()->getContainer().at(i)->getStatus() == trigger->getStatus()){
-                            cout<<trigger->getText()<<"\n";
-                            if(trigger->getType() != "permanent"){
-                                trigger->setTriggerFlag(1);
-                            }
-                            return 1;
-                        }
-                        return 0;
-                    }
-                    else{
-                        for(unsigned j = 0; j < player->getCurrentRoom()->getContainer().at(i)->getItem().size(); j++){
-                            if(player->getCurrentRoom()->getContainer().at(i)->getItem().at(j).getName() == trigger->getObject()){
-                                if(player->getCurrentRoom()->getContainer().at(i)->getItem().at(j).getStatus() == trigger->getStatus()){
-                                    cout<<trigger->getText()<<"\n";
-                                    if(trigger->getType() != "permanent"){
-                                        trigger->setTriggerFlag(1);
-                                    }
-                                    return 1;
-                                }
-                                return 0;
-                            }
-                        }
-                    }
-                }
-                return 0;
-            }
-        }
-        else{return 0;}
-    }
-    else{//trigger has no command
-        if(trigger->getHas() != "\0"){ //trigger is object has/not have condition
-            if(trigger->getHas() == "yes"){
-                if(trigger->getOwner() == "inventory"){
-                    for(unsigned i = 0; i < player->getInventory().size(); i++){
-                        if(player->getInventory().at(i).getName() == trigger->getObject()){
-                            cout<<trigger->getText()<<"\n";
-                            for(unsigned j = 0; j < trigger->getAction().size(); j++){
-                                cout<<trigger->getAction().at(i)<<"\n";
-                                interiorCommand(trigger->getAction().at(i), player);
-                            }
-                            if(trigger->getType() != "permanent"){
-                                trigger->setTriggerFlag(1);
-                            }
-                            return 1;
-                        }
-                    }
-                    return 0;
-                }
-                else{
-                    for(unsigned i = 0; i < player->getCurrentRoom()->getContainer().size(); i++){
-                        if(player->getCurrentRoom()->getContainer().at(i)->getName() == trigger->getOwner()){
-                            for(unsigned j = 0; j < player->getCurrentRoom()->getContainer().at(i)->getItem().size(); j++){
-                                if(player->getCurrentRoom()->getContainer().at(i)->getItem().at(j).getName() == trigger->getObject()){return 1;}
-                            }
-                            return 0;
-                        }
-                    }
-                }
-            }
-            else if(trigger->getHas() == "no"){
-                if(trigger->getOwner() == "inventory"){
-                    for(unsigned i = 0; i < player->getInventory().size(); i++){
-                        if(player->getInventory().at(i).getName() == trigger->getObject()){return 0;}
-                    }
-                    return 1;
-                }
-                else{
-                    for(unsigned i = 0; i < player->getCurrentRoom()->getContainer().size(); i++){
-                        if(player->getCurrentRoom()->getContainer().at(i)->getName() == trigger->getOwner()){
-                            for(unsigned j = 0; j < player->getCurrentRoom()->getContainer().at(i)->getItem().size(); j++){
-                                if(player->getCurrentRoom()->getContainer().at(i)->getItem().at(j).getName() == trigger->getObject()){return 0;}
-                            }
-                            return 1;
-                        }
-                    }
-                }         
-            }
-        }
-        else{//trigger is object status condition
-            for(unsigned i = 0; i < player->getInventory().size(); i++){
-                if(player->getInventory().at(i).getName() == trigger->getObject()){
-                    if(player->getInventory().at(i).getStatus() == trigger->getStatus()){
-                        cout<<trigger->getText()<<"\n";
-                        if(trigger->getType() != "permanent"){
-                            trigger->setTriggerFlag(1);
-                        }
-                        return 1;
-                    }
-                    return 0;
-                }
-            }
-            for(unsigned i = 0; i < player->getCurrentRoom()->getContainer().size(); i++){
-                if(player->getCurrentRoom()->getContainer().at(i)->getName() == trigger->getObject()){
-                    if(player->getCurrentRoom()->getContainer().at(i)->getStatus() == trigger->getStatus()){
-                        cout<<trigger->getText()<<"\n";
-                        if(trigger->getType() != "permanent"){
-                            trigger->setTriggerFlag(1);
-                        }
-                        return 1;
-                    }
-                    return 0;
-                }
-                else{
-                    for(unsigned j = 0; j < player->getCurrentRoom()->getContainer().at(i)->getItem().size(); j++){
-                        if(player->getCurrentRoom()->getContainer().at(i)->getItem().at(j).getName() == trigger->getObject()){
-                            if(player->getCurrentRoom()->getContainer().at(i)->getItem().at(j).getStatus() == trigger->getStatus()){
-                                cout<<trigger->getText()<<"\n";
-                                if(trigger->getType() != "permanent"){
-                                    trigger->setTriggerFlag(1);
-                                }
-                                return 1;
-                            }
-                            return 0;
-                        }
-                    }
-                }
-            }
-            return 0;
-        }
-        return 0;
-    }
-    return 0;
-}
-
-//function that handles player commands
-void getPlayerAction(Player *player){
-    string command;
-    vector<Item> items;
-    vector<Container*> containers;
-    Item moved_item;
-    getline(cin,command);
-    int trig = 0;
-    
-    Trigger temp_trigger = player->getCurrentRoom()->getTrigger();
-    trig = checkTriggers(player, &temp_trigger, command);
-    player->getCurrentRoom()->setTrigger(temp_trigger);
-    
-    if(command == "n"){
-        if(trig == 1){return;}
+    else if(command == "n"){
         if(player->getCurrentRoom()->getNorth() != NULL){
             player->setCurrentRoom(player->getCurrentRoom()->getNorth());
             cout<<player->getCurrentRoom()->getDescription()<<"\n";
@@ -620,6 +411,331 @@ void getPlayerAction(Player *player){
     }
     
     else if(command == "w"){
+        if(player->getCurrentRoom()->getWest() != NULL){
+            player->setCurrentRoom(player->getCurrentRoom()->getWest());
+            cout<<player->getCurrentRoom()->getDescription()<<"\n";
+        }
+        else{
+            cout<<"Can't go that way.\n";
+        }
+    }
+    
+    return;
+}
+
+//function to check triggers
+int checkTriggers(Player *player, Trigger *trigger, string command){
+    Room *currentRoom = player->getCurrentRoom();
+    if(trigger->getTriggerFlag() == 1){return 0;}
+    
+    else if(trigger->getCommand() != "\0"){//trigger has a specific command
+        if(command == trigger->getCommand()){
+            if(trigger->getHas() != "\0"){
+                if(trigger->getHas() == "yes"){
+                    if(trigger->getOwner() == "inventory"){
+                        for(unsigned i = 0; i < player->getInventory().size(); i++){
+                            if(player->getInventory().at(i).getName() == trigger->getObject()){
+                                cout<<trigger->getText()<<"\n";
+                                for(unsigned j = 0; j < trigger->getAction().size(); j++){
+                                    interiorCommand(trigger->getAction().at(j), player, currentRoom);
+                                }
+                                if(trigger->getType() != "permanent"){
+                                    trigger->setTriggerFlag(1);
+                                }
+                                return 1;
+                            }
+                        }
+                        return 0;
+                    }
+                    else{
+                        for(unsigned i = 0; i < player->getCurrentRoom()->getContainer().size(); i++){
+                            if(player->getCurrentRoom()->getContainer().at(i)->getName() == trigger->getOwner()){
+                                for(unsigned j = 0; j < player->getCurrentRoom()->getContainer().at(i)->getItem().size(); j++){
+                                    if(player->getCurrentRoom()->getContainer().at(i)->getItem().at(j).getName() == trigger->getObject()){
+                                        cout<<trigger->getText()<<"\n";
+                                        for(unsigned k = 0; k < trigger->getAction().size(); k++){
+                                            interiorCommand(trigger->getAction().at(k), player, currentRoom);
+                                        }
+                                        if(trigger->getType() != "permanent"){
+                                            trigger->setTriggerFlag(1);
+                                        }
+                                        return 1;
+                                    }
+                                }
+                                return 0;
+                            }
+                        }
+                    }
+                }
+                else if(trigger->getHas() == "no"){
+                    if(trigger->getOwner() == "inventory"){
+                        for(unsigned i = 0; i < player->getInventory().size(); i++){
+                            if(player->getInventory().at(i).getName() == trigger->getObject()){return 0;}
+                        }
+                        cout<<trigger->getText()<<"\n";
+                        for(unsigned j = 0; j < trigger->getAction().size(); j++){
+                            interiorCommand(trigger->getAction().at(j), player, currentRoom);
+                        }
+                        if(trigger->getType() != "permanent"){
+                            trigger->setTriggerFlag(1);
+                        }
+                        return 1;
+                    }
+                    else{
+                        for(unsigned i = 0; i < player->getCurrentRoom()->getContainer().size(); i++){
+                            if(player->getCurrentRoom()->getContainer().at(i)->getName() == trigger->getOwner()){
+                                for(unsigned j = 0; j < player->getCurrentRoom()->getContainer().at(i)->getItem().size(); j++){
+                                    if(player->getCurrentRoom()->getContainer().at(i)->getItem().at(j).getName() == trigger->getObject()){return 0;}
+                                }
+                                cout<<trigger->getText()<<"\n";
+                                for(unsigned j = 0; j < trigger->getAction().size(); j++){
+                                    interiorCommand(trigger->getAction().at(j), player, currentRoom);
+                                }
+                                if(trigger->getType() != "permanent"){
+                                    trigger->setTriggerFlag(1);
+                                }
+                                return 1;
+                            }
+                        }
+                    }         
+                }
+                return 0;
+            }
+            else{//trigger is an object status condition
+                for(unsigned i = 0; i < player->getInventory().size(); i++){
+                    if(player->getInventory().at(i).getName() == trigger->getObject()){
+                        if(player->getInventory().at(i).getStatus() == trigger->getStatus()){
+                            cout<<trigger->getText()<<"\n";
+                            for(unsigned j = 0; j < trigger->getAction().size(); j++){
+                                interiorCommand(trigger->getAction().at(j), player, currentRoom);
+                            }
+                            if(trigger->getType() != "permanent"){
+                                trigger->setTriggerFlag(1);
+                            }
+                            return 1;
+                        }
+                        return 0;
+                    }
+                }
+                for(unsigned i = 0; i < player->getCurrentRoom()->getContainer().size(); i++){
+                    if(player->getCurrentRoom()->getContainer().at(i)->getName() == trigger->getObject()){
+                        if(player->getCurrentRoom()->getContainer().at(i)->getStatus() == trigger->getStatus()){
+                            cout<<trigger->getText()<<"\n";
+                            for(unsigned j = 0; j < trigger->getAction().size(); j++){
+                                interiorCommand(trigger->getAction().at(j), player, currentRoom);
+                            }
+                            if(trigger->getType() != "permanent"){
+                                trigger->setTriggerFlag(1);
+                            }
+                            return 1;
+                        }
+                        return 0;
+                    }
+                    else{
+                        for(unsigned j = 0; j < player->getCurrentRoom()->getContainer().at(i)->getItem().size(); j++){
+                            if(player->getCurrentRoom()->getContainer().at(i)->getItem().at(j).getName() == trigger->getObject()){
+                                if(player->getCurrentRoom()->getContainer().at(i)->getItem().at(j).getStatus() == trigger->getStatus()){
+                                    cout<<trigger->getText()<<"\n";
+                                    for(unsigned k = 0; k < trigger->getAction().size(); k++){
+                                        interiorCommand(trigger->getAction().at(k), player, currentRoom);
+                                    }
+                                    if(trigger->getType() != "permanent"){
+                                        trigger->setTriggerFlag(1);
+                                    }
+                                    return 1;
+                                }
+                                return 0;
+                            }
+                        }
+                    }
+                }
+                return 0;
+            }
+        }
+        else{return 0;}
+    }
+    else{//trigger has no command
+        if(trigger->getHas() != "\0"){ //trigger is object has/not have condition
+            if(trigger->getHas() == "yes"){
+                if(trigger->getOwner() == "inventory"){
+                    for(unsigned i = 0; i < player->getInventory().size(); i++){
+                        if(player->getInventory().at(i).getName() == trigger->getObject()){
+                            cout<<trigger->getText()<<"\n";
+                            for(unsigned j = 0; j < trigger->getAction().size(); j++){
+                                interiorCommand(trigger->getAction().at(j), player, currentRoom);
+                            }
+                            if(trigger->getType() != "permanent"){
+                                trigger->setTriggerFlag(1);
+                            }
+                            return 1;
+                        }
+                    }
+                    return 0;
+                }
+                else{
+                    for(unsigned i = 0; i < player->getCurrentRoom()->getContainer().size(); i++){
+                        if(player->getCurrentRoom()->getContainer().at(i)->getName() == trigger->getOwner()){
+                            for(unsigned j = 0; j < player->getCurrentRoom()->getContainer().at(i)->getItem().size(); j++){
+                                if(player->getCurrentRoom()->getContainer().at(i)->getItem().at(j).getName() == trigger->getObject()){
+                                    cout<<trigger->getText()<<"\n";
+                                    for(unsigned k = 0; k < trigger->getAction().size(); k++){
+                                        interiorCommand(trigger->getAction().at(k), player, currentRoom);
+                                    }
+                                    if(trigger->getType() != "permanent"){
+                                        trigger->setTriggerFlag(1);
+                                    }
+                                    return 1;
+                                }
+                            }
+                            return 0;
+                        }
+                    }
+                }
+            }
+            else if(trigger->getHas() == "no"){
+                if(trigger->getOwner() == "inventory"){
+                    for(unsigned i = 0; i < player->getInventory().size(); i++){
+                        if(player->getInventory().at(i).getName() == trigger->getObject()){return 0;}
+                    }
+                    cout<<trigger->getText()<<"\n";
+                    for(unsigned j = 0; j < trigger->getAction().size(); j++){
+                        interiorCommand(trigger->getAction().at(j), player, currentRoom);
+                    }
+                    if(trigger->getType() != "permanent"){
+                        trigger->setTriggerFlag(1);
+                    }
+                    return 1;
+                }
+                else{
+                    for(unsigned i = 0; i < player->getCurrentRoom()->getContainer().size(); i++){
+                        if(player->getCurrentRoom()->getContainer().at(i)->getName() == trigger->getOwner()){
+                            for(unsigned j = 0; j < player->getCurrentRoom()->getContainer().at(i)->getItem().size(); j++){
+                                if(player->getCurrentRoom()->getContainer().at(i)->getItem().at(j).getName() == trigger->getObject()){return 0;}
+                            }
+                            cout<<trigger->getText()<<"\n";
+                            for(unsigned j = 0; j < trigger->getAction().size(); j++){
+                                interiorCommand(trigger->getAction().at(j), player, currentRoom);
+                            }
+                            if(trigger->getType() != "permanent"){
+                                trigger->setTriggerFlag(1);
+                            }
+                            return 1;
+                        }
+                    }
+                }         
+            }
+        }
+        else{//trigger is object status condition
+            for(unsigned i = 0; i < player->getInventory().size(); i++){
+                if(player->getInventory().at(i).getName() == trigger->getObject()){
+                    if(player->getInventory().at(i).getStatus() == trigger->getStatus()){
+                        cout<<trigger->getText()<<"\n";
+                        for(unsigned j = 0; j < trigger->getAction().size(); j++){
+                            interiorCommand(trigger->getAction().at(j), player, currentRoom);
+                        }
+                        if(trigger->getType() != "permanent"){
+                            trigger->setTriggerFlag(1);
+                        }
+                        return 1;
+                    }
+                    return 0;
+                }
+            }
+            for(unsigned i = 0; i < player->getCurrentRoom()->getContainer().size(); i++){
+                if(player->getCurrentRoom()->getContainer().at(i)->getName() == trigger->getObject()){
+                    if(player->getCurrentRoom()->getContainer().at(i)->getStatus() == trigger->getStatus()){
+                        cout<<trigger->getText()<<"\n";
+                        if(trigger->getType() != "permanent"){
+                            trigger->setTriggerFlag(1);
+                        }
+                        for(unsigned j = 0; j < trigger->getAction().size(); j++){
+                            interiorCommand(trigger->getAction().at(j), player, currentRoom);
+                        }
+                        return 1;
+                    }
+                    return 0;
+                }
+                else{
+                    for(unsigned j = 0; j < player->getCurrentRoom()->getContainer().at(i)->getItem().size(); j++){
+                        if(player->getCurrentRoom()->getContainer().at(i)->getItem().at(j).getName() == trigger->getObject()){
+                            if(player->getCurrentRoom()->getContainer().at(i)->getItem().at(j).getStatus() == trigger->getStatus()){
+                                cout<<trigger->getText()<<"\n";
+                                for(unsigned k = 0; k < trigger->getAction().size(); k++){
+                                    interiorCommand(trigger->getAction().at(k), player, currentRoom);
+                                }
+                                if(trigger->getType() != "permanent"){
+                                    trigger->setTriggerFlag(1);
+                                }
+                                return 1;
+                            }
+                            return 0;
+                        }
+                    }
+                }
+            }
+            return 0;
+        }
+        return 0;
+    }
+    return 0;
+}
+
+//function that handles player commands
+void getPlayerAction(Player *player){
+    string command;
+    vector<Item> items;
+    vector<Container*> containers;
+    Item moved_item;
+    getline(cin,command);
+    int trig = 0;
+    Room* currentRoom = player->getCurrentRoom();
+    
+    Trigger temp_trigger = player->getCurrentRoom()->getTrigger();
+    trig = checkTriggers(player, &temp_trigger, command);
+    player->getCurrentRoom()->setTrigger(temp_trigger);
+    
+    for(unsigned i = 0; i < currentRoom->getCreature().size(); i++){
+        temp_trigger = currentRoom->getCreature().at(i)->getTrigger();
+        trig = checkTriggers(player, &temp_trigger, command);
+        currentRoom->getCreature().at(i)->setTrigger(temp_trigger);
+        
+    }
+    
+    if(command == "n"){
+        if(trig == 1){return;}
+        if(player->getCurrentRoom()->getNorth() != NULL){
+            player->setCurrentRoom(player->getCurrentRoom()->getNorth());
+            cout<<player->getCurrentRoom()->getDescription()<<"\n";
+        }
+        else{
+            cout<<"Can't go that way.\n";
+        }
+    }
+    
+    else if(command == "e"){
+        if(trig == 1){return;}
+        if(player->getCurrentRoom()->getEast() != NULL){
+            player->setCurrentRoom(player->getCurrentRoom()->getEast());
+            cout<<player->getCurrentRoom()->getDescription()<<"\n";
+        }
+        else{
+            cout<<"Can't go that way.\n";
+        }
+    }
+    
+    else if(command == "s"){
+        if(trig == 1){return;}
+        if(player->getCurrentRoom()->getSouth() != NULL){
+            player->setCurrentRoom(player->getCurrentRoom()->getSouth());
+            cout<<player->getCurrentRoom()->getDescription()<<"\n";
+        }
+        else{
+            cout<<"Can't go that way.\n";
+        }
+    }
+    
+    else if(command == "w"){
+        if(trig == 1){return;}
         if(player->getCurrentRoom()->getWest() != NULL){
             player->setCurrentRoom(player->getCurrentRoom()->getWest());
             cout<<player->getCurrentRoom()->getDescription()<<"\n";
@@ -732,7 +848,7 @@ void getPlayerAction(Player *player){
     else if(command.find("put") != string::npos){
         for(unsigned i = 0; i < player->getInventory().size(); i++){
             if(command.find(player->getInventory().at(i).getName()) != string::npos){
-                for(unsigned j = 0; i < player->getCurrentRoom()->getContainer().size(); j++){
+                for(unsigned j = 0; j < player->getCurrentRoom()->getContainer().size(); j++){
                     if(command.find(player->getCurrentRoom()->getContainer().at(j)->getName()) != string::npos){
                         if(player->getCurrentRoom()->getContainer().at(j)->getAccept() == "\0"
                         && player->getCurrentRoom()->getContainer().at(j)->getOpenFlag() > 0){
@@ -766,7 +882,7 @@ void getPlayerAction(Player *player){
                     cout<<player->getInventory().at(i).getTurnOnText()<<"\n";
                 }
                 for(unsigned j = 0; j < player->getInventory().at(i).getTurnOnAction().size(); j++){
-                    interiorCommand(player->getInventory().at(i).getTurnOnAction().at(j), player);
+                    interiorCommand(player->getInventory().at(i).getTurnOnAction().at(j), player, currentRoom);
                     if(player->getInventory().size() == 0){return;}
                 }
                 return;
@@ -776,16 +892,44 @@ void getPlayerAction(Player *player){
     }
     
     else if(command.find("attack") != string::npos){
-        
+        for(unsigned i = 0; i < player->getCurrentRoom()->getCreature().size(); i++){
+            if(command.find(player->getCurrentRoom()->getCreature().at(i)->getName()) != string::npos){
+                for(unsigned j = 0; j < player->getCurrentRoom()->getCreature().at(i)->getVulnerability().size(); j++){
+                    if(command.find(player->getCurrentRoom()->getCreature().at(i)->getVulnerability().at(j)) != string::npos){
+                        for(unsigned k = 0; k < player->getInventory().size(); k++){
+                            if(player->getInventory().at(k).getName() == player->getCurrentRoom()->getCreature().at(i)->getCondObject()){
+                                if(player->getInventory().at(k).getStatus() == player->getCurrentRoom()->getCreature().at(i)->getCondStatus()){
+                                    if(currentRoom->getCreature().at(i)->getAttackText() != "\0"){cout<<currentRoom->getCreature().at(i)->getAttackText()<<"\n";}
+                                    Creature creature = *currentRoom->getCreature().at(i);
+                                    for(unsigned l = 0; l < creature.getAttackAction().size(); l++){
+                                        interiorCommand(creature.getAttackAction().at(l), player, currentRoom);
+                                    }
+                                    return;
+                                }
+                                return;
+                            }
+                            else if(player->getCurrentRoom()->getCreature().at(i)->getCondObject() == "\0"){
+                                cout<<currentRoom->getCreature().at(i)->getAttackText()<<"\n";
+                                Creature creature = *currentRoom->getCreature().at(i);
+                                for(unsigned l = 0; l < creature.getAttackAction().size(); l++){
+                                    interiorCommand(creature.getAttackAction().at(l), player, currentRoom);
+                                }
+                                return;
+                            }
+                        }
+                    }
+                }
+            }
+            return;
+        } 
+        return;
     }
-    
-    return;
 }
 
 //main function
 int main(int argc, char **argv){
     vector<Room> rooms;
-    //vector<Item*> item_refs; //if we want to change items to references
+    vector<Item*> item_refs;
     vector<Container> containers;
     vector<Container*> cont_refs;
     vector<Creature*> creat_refs;
@@ -793,6 +937,9 @@ int main(int argc, char **argv){
     
     rooms = parseXMLRooms(argv[1]);
     master_items = parseXMLItems(argv[1]);
+    for(unsigned i = 0; i < master_items.size(); i++){
+        item_refs.push_back(&master_items.at(i));
+    }
     containers = parseXMLContainers(argv[1]);
     for(unsigned i = 0; i < containers.size(); i++){
         cont_refs.push_back(&containers.at(i));
@@ -845,6 +992,12 @@ int main(int argc, char **argv){
             
         }
         
+        for(unsigned i = 0; i < player.getCurrentRoom()->getContainer().size(); i++){
+            temp_trigger = player.getCurrentRoom()->getContainer().at(i)->getTrigger();
+            trig = checkTriggers(&player, &temp_trigger, "");
+            player.getCurrentRoom()->getContainer().at(i)->setTrigger(temp_trigger);
+            
+        }
     }
     
     cout<<"Game Over\n";
