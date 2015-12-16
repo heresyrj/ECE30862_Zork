@@ -909,12 +909,14 @@ void getPlayerAction(Player *player){
                                 return;
                             }
                             else if(player->getCurrentRoom()->getCreature().at(i)->getCondObject() == "\0"){
-                                cout<<currentRoom->getCreature().at(i)->getAttackText()<<"\n";
-                                Creature creature = *currentRoom->getCreature().at(i);
-                                for(unsigned l = 0; l < creature.getAttackAction().size(); l++){
-                                    interiorCommand(creature.getAttackAction().at(l), player, currentRoom);
+                                if(command.find(player->getInventory().at(k).getName()) != string::npos){
+                                    cout<<currentRoom->getCreature().at(i)->getAttackText()<<"\n";
+                                    Creature creature = *currentRoom->getCreature().at(i);
+                                    for(unsigned l = 0; l < creature.getAttackAction().size(); l++){
+                                        interiorCommand(creature.getAttackAction().at(l), player, currentRoom);
+                                    }
+                                    return;
                                 }
-                                return;
                             }
                         }
                     }
