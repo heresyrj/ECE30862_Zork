@@ -687,22 +687,29 @@ void getPlayerAction(Player *player){
     vector<Container*> containers;
     Item moved_item;
     getline(cin,command);
-    int trig = 0;
+    int trig1 = 0, trig2 = 0, trig3 = 0;
     Room* currentRoom = player->getCurrentRoom();
     
     Trigger temp_trigger = player->getCurrentRoom()->getTrigger();
-    trig = checkTriggers(player, &temp_trigger, command);
+    trig1 = checkTriggers(player, &temp_trigger, command);
     player->getCurrentRoom()->setTrigger(temp_trigger);
     
     for(unsigned i = 0; i < currentRoom->getCreature().size(); i++){
         temp_trigger = currentRoom->getCreature().at(i)->getTrigger();
-        trig = checkTriggers(player, &temp_trigger, command);
+        trig2 = checkTriggers(player, &temp_trigger, command);
         currentRoom->getCreature().at(i)->setTrigger(temp_trigger);
         
     }
     
+    for(unsigned i = 0; i < currentRoom->getContainer().size(); i++){
+        temp_trigger = currentRoom->getContainer().at(i)->getTrigger();
+        trig3 = checkTriggers(player, &temp_trigger, command);
+        currentRoom->getContainer().at(i)->setTrigger(temp_trigger);
+        
+    }
+
     if(command == "n"){
-        if(trig == 1){return;}
+        if(trig1 == 1 || trig2 == 1 || trig3 == 1){return;}
         if(player->getCurrentRoom()->getNorth() != NULL){
             player->setCurrentRoom(player->getCurrentRoom()->getNorth());
             cout<<player->getCurrentRoom()->getDescription()<<"\n";
@@ -713,7 +720,7 @@ void getPlayerAction(Player *player){
     }
     
     else if(command == "e"){
-        if(trig == 1){return;}
+        if(trig1 == 1 || trig2 == 1 || trig3 == 1){return;}
         if(player->getCurrentRoom()->getEast() != NULL){
             player->setCurrentRoom(player->getCurrentRoom()->getEast());
             cout<<player->getCurrentRoom()->getDescription()<<"\n";
@@ -724,7 +731,7 @@ void getPlayerAction(Player *player){
     }
     
     else if(command == "s"){
-        if(trig == 1){return;}
+        if(trig1 == 1 || trig2 == 1 || trig3 == 1){return;}
         if(player->getCurrentRoom()->getSouth() != NULL){
             player->setCurrentRoom(player->getCurrentRoom()->getSouth());
             cout<<player->getCurrentRoom()->getDescription()<<"\n";
@@ -735,7 +742,7 @@ void getPlayerAction(Player *player){
     }
     
     else if(command == "w"){
-        if(trig == 1){return;}
+        if(trig1 == 1 || trig2 == 1 || trig3 == 1){return;}
         if(player->getCurrentRoom()->getWest() != NULL){
             player->setCurrentRoom(player->getCurrentRoom()->getWest());
             cout<<player->getCurrentRoom()->getDescription()<<"\n";
